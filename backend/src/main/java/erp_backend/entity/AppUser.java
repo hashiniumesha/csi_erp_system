@@ -1,4 +1,4 @@
-package com.csi.erp_backend.entity;
+package erp_backend.entity;
 
 import jakarta.persistence.*;
 
@@ -46,4 +46,4 @@ public class AppUser {
     public Status getStatus() { return status; }
     public void setStatus(Status status) { this.status = status; }
 
-}   
+}

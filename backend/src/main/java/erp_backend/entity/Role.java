@@ -1,18 +1,17 @@
-package com.csi.erp_backend.entity;
+package erp_backend.entity;
 
 import jakarta.persistence.*;
 
 @Entity
-@Table(name = "roles")
+@Table(name = "Role")
 public class Role {
-
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "RoleID")
     private Integer roleId;
 
-    @Column(name = "RoleName",nullable = false)
+    @Column(name = "RoleName", nullable = false)
     private String roleName;
 
     public Integer getRoleId() {

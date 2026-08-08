@@ -1,6 +1,6 @@
-package com.csi.erp_backend.repository;
+package erp_backend.repository;
 
-import com.csi.erp_backend.entity.AppUser;
+import erp_backend.entity.AppUser;
 import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.Optional;
 
