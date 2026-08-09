@@ -1,4 +1,4 @@
-package com.csi.erp_backend.entity;
+package erp_backend.entity;
 
 import jakarta.persistence.*;
 
