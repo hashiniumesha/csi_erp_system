@@ -1,9 +1,9 @@
-package com.csi.erp_backend.entity;
+package erp_backend.entity;
 
 import jakarta.persistence.*;
 
 @Entity
-@Table(name = "roles")
+@Table(name = "Role")
 public class Role {
 
 
