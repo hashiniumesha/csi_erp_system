@@ -27,4 +27,5 @@ public class RawMaterial {
     public void setCurrentStock(Double currentStock) { this.currentStock = currentStock; }
     public Double getReorderLevel() { return reorderLevel; }
     public void setReorderLevel(Double reorderLevel) { this.reorderLevel = reorderLevel; }
+    
 }
