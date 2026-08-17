@@ -1,4 +1,4 @@
-package com.csi.erp_backend.config;
+package erp_backend.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
