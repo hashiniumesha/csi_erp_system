@@ -1,12 +1,11 @@
 package erp_backend.service;
 
-import erp_backend.entity.AppUser;
-import erp_backend.repository.AppUserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.Optional;
+import erp_backend.entity.AppUser;
+import erp_backend.repository.AppUserRepository;
 
 @Service
 public class AppUserService {
@@ -18,7 +17,7 @@ public class AppUserService {
     private PasswordEncoder passwordEncoder;
 
     public AppUser login(String username, String password) {
-        Optional<AppUser> userOpt = appUserRepository.findByUsername(username);
+        java.util.Optional<AppUser> userOpt = appUserRepository.findByUsername(username);
         if (userOpt.isEmpty()) {
             throw new RuntimeException("Invalid username or password");
         }
