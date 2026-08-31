@@ -18,6 +18,13 @@ import org.json.JSONObject;
  */
 public class SalesView {
 
+    // Pairs a database ID with the text shown in the dropdown. Typing
+    // ".toString()" on one of these returns the label, so the ComboBox
+    // shows the name instead of a raw ID.
+    private record Option(int id, String label) {
+        @Override public String toString() { return label; }
+    }
+
     public static Node build() {
         Label title = new Label("Sales & Billing");
         title.getStyleClass().add("page-title");
@@ -71,20 +78,47 @@ public class SalesView {
         return card;
     }
 
-    private static VBox buildInvoiceCard() {
+        private static VBox buildInvoiceCard() {
         Label sectionTitle = new Label("Create Invoice (single item)");
         sectionTitle.getStyleClass().add("section-title");
 
-        TextField customerIdField = new TextField();
-        customerIdField.setPromptText("Customer ID (dropdown coming Day 2)");
-        TextField officerIdField = new TextField();
-        officerIdField.setPromptText("Sales officer (user) ID");
+        ComboBox<Option> customerBox = new ComboBox<>();
+        customerBox.setPromptText("Select customer");
+        customerBox.setMaxWidth(Double.MAX_VALUE);
+
+        ComboBox<Option> officerBox = new ComboBox<>();
+        officerBox.setPromptText("Select sales officer");
+        officerBox.setMaxWidth(Double.MAX_VALUE);
+
+        ComboBox<Option> productBox = new ComboBox<>();
+        productBox.setPromptText("Select product");
+        productBox.setMaxWidth(Double.MAX_VALUE);
+
+        try {
+            for (Object o : ApiClient.getArray("/api/sales/customers")) {
+                JSONObject c = (JSONObject) o;
+                customerBox.getItems().add(new Option(c.getInt("customerId"), c.getString("name")));
+            }
+            for (Object o : ApiClient.getArray("/api/users")) {
+                JSONObject u = (JSONObject) o;
+                String role = u.optString("roleName", "");
+                if (!"Sales Officer".equals(role) && !"Admin".equals(role)) continue;
+                officerBox.getItems().add(new Option(u.getInt("userId"), u.getString("fullName") + " (" + role + ")"));
+            }
+            for (Object o : ApiClient.getArray("/api/inventory/finished-products")) {
+                JSONObject p = (JSONObject) o;
+                productBox.getItems().add(new Option(p.getInt("productId"), p.getString("name")));
+            }
+        } catch (ApiClient.ApiException e) {
+            customerBox.setPromptText("Couldn't load customers");
+            officerBox.setPromptText("Couldn't load sales officers");
+            productBox.setPromptText("Couldn't load products");
+        }
+
         ComboBox<String> paymentTypeBox = new ComboBox<>();
         paymentTypeBox.getItems().addAll("Cash", "Credit");
         paymentTypeBox.setPromptText("Payment type");
         paymentTypeBox.setMaxWidth(Double.MAX_VALUE);
-        TextField productIdField = new TextField();
-        productIdField.setPromptText("Product ID");
         TextField quantityField = new TextField();
         quantityField.setPromptText("e.g. 10");
         TextField priceField = new TextField();
@@ -95,13 +129,10 @@ public class SalesView {
         Label statusLabel = newHiddenStatusLabel();
 
         createButton.setOnAction(e -> {
-            Integer customerId = parsePositiveInt(customerIdField.getText());
-            if (customerId == null) { showError(statusLabel, "Enter a valid Customer ID."); return; }
-            Integer officerId = parsePositiveInt(officerIdField.getText());
-            if (officerId == null) { showError(statusLabel, "Enter a valid Sales Officer ID."); return; }
+            if (customerBox.getValue() == null) { showError(statusLabel, "Select a customer."); return; }
+            if (officerBox.getValue() == null) { showError(statusLabel, "Select a sales officer."); return; }
             if (paymentTypeBox.getValue() == null) { showError(statusLabel, "Select a payment type."); return; }
-            Integer productId = parsePositiveInt(productIdField.getText());
-            if (productId == null) { showError(statusLabel, "Enter a valid Product ID."); return; }
+            if (productBox.getValue() == null) { showError(statusLabel, "Select a product."); return; }
             Double quantity = parsePositiveDouble(quantityField.getText());
             if (quantity == null) { showError(statusLabel, "Enter a valid quantity greater than 0."); return; }
             Double price = parsePositiveDouble(priceField.getText());
@@ -109,13 +140,13 @@ public class SalesView {
 
             try {
                 JSONObject item = new JSONObject();
-                item.put("productId", productId);
+                item.put("productId", productBox.getValue().id());
                 item.put("quantity", quantity);
                 item.put("unitPrice", price);
 
                 JSONObject body = new JSONObject();
-                body.put("customerId", customerId);
-                body.put("salesOfficerId", officerId);
+                body.put("customerId", customerBox.getValue().id());
+                body.put("salesOfficerId", officerBox.getValue().id());
                 body.put("paymentType", paymentTypeBox.getValue());
                 body.put("items", new JSONArray().put(item));
 
@@ -128,13 +159,15 @@ public class SalesView {
         });
 
         VBox card = new VBox(10, sectionTitle,
-                labeled("Customer ID", customerIdField), labeled("Sales officer ID", officerIdField),
-                labeled("Payment type", paymentTypeBox), labeled("Product ID", productIdField),
+                labeled("Customer", customerBox), labeled("Sales officer", officerBox),
+                labeled("Payment type", paymentTypeBox), labeled("Product", productBox),
                 labeled("Quantity", quantityField), labeled("Unit price", priceField),
                 createButton, statusLabel);
         card.getStyleClass().add("card");
         return card;
     }
+
+    
 
     private static VBox buildCollectionCard() {
         Label sectionTitle = new Label("Record Credit Collection");
