@@ -8,13 +8,15 @@ import org.json.JSONObject;
 
 /**
  * Inventory module.
- *
- * DAY 2 TODO (see QCView for the pattern to follow): swap the raw numeric
- * "Product ID" TextFields below for ComboBoxes bound to
- * GET /api/inventory/finished-products, and give damaged/expiry stock
- * movements the same client-side validation QCView already has.
  */
 public class InventoryView {
+
+    // Pairs a database ID with the text shown in the dropdown. Typing
+    // ".toString()" on one of these returns the label, so the ComboBox
+    // shows the name instead of a raw ID.
+    private record Option(int id, String label) {
+        @Override public String toString() { return label; }
+    }
 
     public static Node build() {
         Label title = new Label("Inventory");
@@ -73,8 +75,18 @@ public class InventoryView {
         Label sectionTitle = new Label("Record Finished Product Stock Movement");
         sectionTitle.getStyleClass().add("section-title");
 
-        TextField productIdField = new TextField();
-        productIdField.setPromptText("Product ID (dropdown coming Day 2)");
+        ComboBox<Option> productBox = new ComboBox<>();
+        productBox.setPromptText("Select product");
+        productBox.setMaxWidth(Double.MAX_VALUE);
+        try {
+            for (Object o : ApiClient.getArray("/api/inventory/finished-products")) {
+                JSONObject p = (JSONObject) o;
+                productBox.getItems().add(new Option(p.getInt("productId"), p.getString("name")));
+            }
+        } catch (ApiClient.ApiException e) {
+            productBox.setPromptText("Couldn't load products");
+        }
+
         ComboBox<String> movementTypeBox = new ComboBox<>();
         movementTypeBox.getItems().addAll("IN", "OUT");
         movementTypeBox.setPromptText("Movement type");
@@ -87,29 +99,28 @@ public class InventoryView {
         Label statusLabel = newHiddenStatusLabel();
 
         recordButton.setOnAction(e -> {
-            Integer productId = parsePositiveInt(productIdField.getText());
-            if (productId == null) { showError(statusLabel, "Enter a valid Product ID."); return; }
+            if (productBox.getValue() == null) { showError(statusLabel, "Select a product."); return; }
             if (movementTypeBox.getValue() == null) { showError(statusLabel, "Select IN or OUT."); return; }
             Double quantity = parsePositiveDouble(quantityField.getText());
             if (quantity == null) { showError(statusLabel, "Enter a valid quantity greater than 0."); return; }
 
             try {
                 JSONObject body = new JSONObject();
-                body.put("itemId", productId);
+                body.put("itemId", productBox.getValue().id());
                 body.put("movementType", movementTypeBox.getValue());
                 body.put("quantity", quantity);
                 body.put("referenceType", "Manual");
                 body.putOpt("referenceId", null);
                 ApiClient.post("/api/inventory/finished-product-movement", body);
                 showSuccess(statusLabel, "Movement recorded.");
-                productIdField.clear(); quantityField.clear();
+                quantityField.clear();
             } catch (ApiClient.ApiException ex) {
                 showError(statusLabel, ex.getMessage());
             }
         });
 
         VBox card = new VBox(10, sectionTitle,
-                labeled("Product ID", productIdField), labeled("Movement type", movementTypeBox), labeled("Quantity", quantityField),
+                labeled("Product", productBox), labeled("Movement type", movementTypeBox), labeled("Quantity", quantityField),
                 recordButton, statusLabel);
         card.getStyleClass().add("card");
         return card;
@@ -119,8 +130,18 @@ public class InventoryView {
         Label sectionTitle = new Label("Record Damaged Product");
         sectionTitle.getStyleClass().add("section-title");
 
-        TextField productIdField = new TextField();
-        productIdField.setPromptText("Product ID (dropdown coming Day 2)");
+        ComboBox<Option> productBox = new ComboBox<>();
+        productBox.setPromptText("Select product");
+        productBox.setMaxWidth(Double.MAX_VALUE);
+        try {
+            for (Object o : ApiClient.getArray("/api/inventory/finished-products")) {
+                JSONObject p = (JSONObject) o;
+                productBox.getItems().add(new Option(p.getInt("productId"), p.getString("name")));
+            }
+        } catch (ApiClient.ApiException e) {
+            productBox.setPromptText("Couldn't load products");
+        }
+
         TextField quantityField = new TextField();
         quantityField.setPromptText("e.g. 5");
         TextField causeField = new TextField();
@@ -135,8 +156,7 @@ public class InventoryView {
         Label statusLabel = newHiddenStatusLabel();
 
         recordButton.setOnAction(e -> {
-            Integer productId = parsePositiveInt(productIdField.getText());
-            if (productId == null) { showError(statusLabel, "Enter a valid Product ID."); return; }
+            if (productBox.getValue() == null) { showError(statusLabel, "Select a product."); return; }
             Double quantity = parsePositiveDouble(quantityField.getText());
             if (quantity == null) { showError(statusLabel, "Enter a valid quantity greater than 0."); return; }
             if (causeField.getText().isBlank()) { showError(statusLabel, "Enter a cause."); return; }
@@ -144,20 +164,20 @@ public class InventoryView {
 
             try {
                 JSONObject body = new JSONObject();
-                body.put("productId", productId);
+                body.put("productId", productBox.getValue().id());
                 body.put("quantity", quantity);
                 body.put("cause", causeField.getText().trim());
                 body.put("stage", stageBox.getValue());
                 ApiClient.post("/api/inventory/damaged", body);
                 showSuccess(statusLabel, "Damaged stock recorded.");
-                productIdField.clear(); quantityField.clear(); causeField.clear();
+                quantityField.clear(); causeField.clear();
             } catch (ApiClient.ApiException ex) {
                 showError(statusLabel, ex.getMessage());
             }
         });
 
         VBox card = new VBox(10, sectionTitle,
-                labeled("Product ID", productIdField), labeled("Quantity", quantityField),
+                labeled("Product", productBox), labeled("Quantity", quantityField),
                 labeled("Cause", causeField), labeled("Stage", stageBox),
                 recordButton, statusLabel);
         card.getStyleClass().add("card");
