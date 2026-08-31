@@ -15,6 +15,7 @@ public class InventoryController {
     @Autowired private InventoryService inventoryService;
     @Autowired private FinishedProductRepository finishedProductRepository;
     @Autowired private RawMaterialRepository rawMaterialRepository;
+    @Autowired private ExpiryBatchRepository expiryBatchRepository;
 
     public static class FinishedProductRequest {
         public String name;
@@ -41,6 +42,7 @@ public class InventoryController {
         public Integer productId;
         public String expiryDate;
         public Double quantity;
+        public Double unitCost;
     }
 
     @PostMapping("/finished-product")
@@ -83,6 +85,14 @@ public class InventoryController {
     public ExpiryBatch recordExpiry(@RequestBody ExpiryRequest request) {
         FinishedProduct product = finishedProductRepository.findById(request.productId)
                 .orElseThrow(() -> new RuntimeException("Finished product not found"));
-        return inventoryService.recordExpiryBatch(product, LocalDate.parse(request.expiryDate), request.quantity);
+        return inventoryService.recordExpiryBatch(product, LocalDate.parse(request.expiryDate), request.quantity, request.unitCost);
+    }
+
+    // Batch history for one specific finished product — every production
+    // batch, each carrying its own unit cost and expiry date, instead of
+    // the single pooled CurrentStock number on FinishedProduct itself.
+    @GetMapping("/finished-products/{id}/batches")
+    public List<ExpiryBatch> listBatchesForProduct(@PathVariable Integer id) {
+        return expiryBatchRepository.findByProduct_ProductId(id);
     }
 }

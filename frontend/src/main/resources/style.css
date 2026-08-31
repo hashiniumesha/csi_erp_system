@@ -1,0 +1,163 @@
+/*
+ * CSI ERP visual theme.
+ *
+ * PALETTE — every color the app uses is defined once here, on .root, as a
+ * custom looked-up color. To swap in the real brand palette, only these
+ * ~10 lines need to change; every screen references them by name below.
+ * Placeholder palette is inspired by the sample dashboard: deep teal +
+ * warm gold, calm and elegant rather than bright/saturated.
+ */
+.root {
+    -csi-sidebar-bg: #1F3A35;
+    -csi-sidebar-bg-active: #294A43;
+    -csi-accent: #D9A441;
+    -csi-accent-dark: #B8872F;
+    -csi-page-bg: #F5F3EC;
+    -csi-card-bg: #FFFFFF;
+    -csi-text-dark: #2B2B28;
+    -csi-text-muted: #6E6B62;
+    -csi-text-on-sidebar: #F2EFE6;
+    -csi-text-on-sidebar-muted: #B7C4BF;
+    -csi-border: #E4E1D6;
+    -csi-danger: #B3392A;
+    -csi-danger-bg: #FBEAE7;
+    -csi-success: #2E7D53;
+    -csi-success-bg: #E8F4ED;
+
+    -fx-font-family: "Segoe UI", sans-serif;
+    -fx-background-color: -csi-page-bg;
+}
+
+/* ---------- generic page/card structure ---------- */
+.page-bg {
+    -fx-background-color: -csi-page-bg;
+}
+
+.card {
+    -fx-background-color: -csi-card-bg;
+    -fx-background-radius: 10;
+    -fx-border-radius: 10;
+    -fx-border-color: -csi-border;
+    -fx-border-width: 1;
+    -fx-padding: 20;
+}
+
+.page-title {
+    -fx-font-size: 20px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -csi-text-dark;
+}
+
+.section-title {
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -csi-text-dark;
+}
+
+.muted-label {
+    -fx-text-fill: -csi-text-muted;
+    -fx-font-size: 12px;
+}
+
+/* ---------- sidebar / dashboard shell ---------- */
+.sidebar {
+    -fx-background-color: -csi-sidebar-bg;
+    -fx-padding: 24 0 24 0;
+}
+
+.sidebar-brand {
+    -fx-text-fill: -csi-text-on-sidebar;
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+}
+
+.sidebar-role {
+    -fx-text-fill: -csi-text-on-sidebar-muted;
+    -fx-font-size: 11px;
+}
+
+.sidebar-nav-button {
+    -fx-background-color: transparent;
+    -fx-text-fill: -csi-text-on-sidebar-muted;
+    -fx-font-size: 13px;
+    -fx-alignment: center-left;
+    -fx-padding: 12 24 12 24;
+    -fx-background-radius: 0;
+    -fx-max-width: 999;
+    -fx-cursor: hand;
+}
+
+.sidebar-nav-button:hover {
+    -fx-background-color: -csi-sidebar-bg-active;
+    -fx-text-fill: -csi-text-on-sidebar;
+}
+
+.sidebar-nav-button-active {
+    -fx-background-color: -csi-sidebar-bg-active;
+    -fx-text-fill: -csi-accent;
+    -fx-font-weight: bold;
+}
+
+/* ---------- form controls ---------- */
+.text-field, .combo-box, .date-picker {
+    -fx-background-color: white;
+    -fx-border-color: -csi-border;
+    -fx-border-radius: 6;
+    -fx-background-radius: 6;
+    -fx-padding: 6 10 6 10;
+}
+
+.text-field:focused, .combo-box:focused, .date-picker:focused {
+    -fx-border-color: -csi-accent;
+}
+
+.field-label {
+    -fx-text-fill: -csi-text-dark;
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+}
+
+/* ---------- buttons ---------- */
+.button-primary {
+    -fx-background-color: -csi-accent;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-background-radius: 6;
+    -fx-padding: 9 18 9 18;
+    -fx-cursor: hand;
+}
+
+.button-primary:hover {
+    -fx-background-color: -csi-accent-dark;
+}
+
+.button-secondary {
+    -fx-background-color: transparent;
+    -fx-text-fill: -csi-text-dark;
+    -fx-border-color: -csi-border;
+    -fx-border-radius: 6;
+    -fx-background-radius: 6;
+    -fx-padding: 9 18 9 18;
+    -fx-cursor: hand;
+}
+
+.button-secondary:hover {
+    -fx-background-color: -csi-page-bg;
+}
+
+/* ---------- status / error / success messages ---------- */
+.status-error {
+    -fx-text-fill: -csi-danger;
+    -fx-background-color: -csi-danger-bg;
+    -fx-background-radius: 6;
+    -fx-padding: 8 12 8 12;
+    -fx-font-size: 12px;
+}
+
+.status-success {
+    -fx-text-fill: -csi-success;
+    -fx-background-color: -csi-success-bg;
+    -fx-background-radius: 6;
+    -fx-padding: 8 12 8 12;
+    -fx-font-size: 12px;
+}

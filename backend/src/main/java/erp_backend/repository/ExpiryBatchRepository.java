@@ -4,4 +4,8 @@ import erp_backend.entity.ExpiryBatch;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface ExpiryBatchRepository extends JpaRepository<ExpiryBatch, Integer> {}
+import java.util.List;
+
+public interface ExpiryBatchRepository extends JpaRepository<ExpiryBatch, Integer> {
+    List<ExpiryBatch> findByProduct_ProductId(Integer productId);
+}
