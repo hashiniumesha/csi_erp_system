@@ -2,27 +2,35 @@
  * CSI ERP visual theme.
  *
  * PALETTE — every color the app uses is defined once here, on .root, as a
- * custom looked-up color. To swap in the real brand palette, only these
- * ~10 lines need to change; every screen references them by name below.
- * Placeholder palette is inspired by the sample dashboard: deep teal +
- * warm gold, calm and elegant rather than bright/saturated.
+ * custom looked-up color. Every screen references them by name below, so
+ * the whole app re-themes from this one block.
+ *
+ * Real brand palette (Coolors, 5 swatches):
+ *   Dry Sage    #C9CBA3   Cream Gold  #FFE1A8   Terracotta  #E26D5C
+ *   Wine        #723D46   Deep Wine   #472D30
+ * -csi-accent-dark and -csi-text-muted are the only two colors below NOT
+ * a literal swatch from that palette — they're a manually darkened shade
+ * of Terracotta and a softened Wine, needed for hover states and body text
+ * respectively, kept in the same family on purpose.
  */
 .root {
-    -csi-sidebar-bg: #1F3A35;
-    -csi-sidebar-bg-active: #294A43;
-    -csi-accent: #D9A441;
-    -csi-accent-dark: #B8872F;
-    -csi-page-bg: #F5F3EC;
+    -csi-sidebar-bg: #472D30;
+    -csi-sidebar-bg-active: #723D46;
+    -csi-accent: #E26D5C;
+    -csi-accent-dark: #C15748;
+    -csi-page-bg: #FAF7EF;
     -csi-card-bg: #FFFFFF;
-    -csi-text-dark: #2B2B28;
-    -csi-text-muted: #6E6B62;
-    -csi-text-on-sidebar: #F2EFE6;
-    -csi-text-on-sidebar-muted: #B7C4BF;
-    -csi-border: #E4E1D6;
+    -csi-text-dark: #472D30;
+    -csi-text-muted: #8A6B67;
+    -csi-text-on-sidebar: #FFE1A8;
+    -csi-text-on-sidebar-muted: #C9CBA3;
+    -csi-border: #E7E1D3;
     -csi-danger: #B3392A;
     -csi-danger-bg: #FBEAE7;
-    -csi-success: #2E7D53;
-    -csi-success-bg: #E8F4ED;
+    -csi-success: #5C7A4E;
+    -csi-success-bg: #EAEEE2;
+    -csi-sage: #C9CBA3;
+    -csi-cream: #FFE1A8;
 
     -fx-font-family: "Segoe UI", sans-serif;
     -fx-background-color: -csi-page-bg;
@@ -143,6 +151,55 @@
 
 .button-secondary:hover {
     -fx-background-color: -csi-page-bg;
+}
+
+/* ---------- dashboard home (stat cards + charts) ---------- */
+.dashboard-welcome {
+    -fx-font-size: 22px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -csi-text-dark;
+}
+
+.dashboard-subtitle {
+    -fx-font-size: 13px;
+    -fx-text-fill: -csi-text-muted;
+}
+
+.stat-card {
+    -fx-background-color: -csi-card-bg;
+    -fx-background-radius: 10;
+    -fx-border-radius: 10;
+    -fx-border-color: -csi-border;
+    -fx-border-width: 1 1 1 4;
+    -fx-padding: 16 20 16 16;
+    -fx-min-width: 190;
+}
+
+/* Left-border accent color, cycle through the palette per card so the
+   dashboard reads as colorful rather than one flat accent repeated. */
+.stat-card-terracotta { -fx-border-color: -csi-border -csi-border -csi-border -csi-accent; }
+.stat-card-wine       { -fx-border-color: -csi-border -csi-border -csi-border -csi-sidebar-bg-active; }
+.stat-card-sage       { -fx-border-color: -csi-border -csi-border -csi-border -csi-sage; }
+.stat-card-cream      { -fx-border-color: -csi-border -csi-border -csi-border -csi-cream; }
+
+.stat-card-value {
+    -fx-font-size: 26px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -csi-text-dark;
+}
+
+.stat-card-label {
+    -fx-font-size: 12px;
+    -fx-text-fill: -csi-text-muted;
+}
+
+.chart-card {
+    -fx-background-color: -csi-card-bg;
+    -fx-background-radius: 10;
+    -fx-border-radius: 10;
+    -fx-border-color: -csi-border;
+    -fx-border-width: 1;
+    -fx-padding: 16;
 }
 
 /* ---------- status / error / success messages ---------- */
