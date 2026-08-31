@@ -76,11 +76,12 @@ public class InventoryService {
         return damaged;
     }
 
-    public ExpiryBatch recordExpiryBatch(FinishedProduct product, LocalDate expiryDate, Double quantity) {
+    public ExpiryBatch recordExpiryBatch(FinishedProduct product, LocalDate expiryDate, Double quantity, Double unitCost) {
         ExpiryBatch batch = new ExpiryBatch();
         batch.setProduct(product);
         batch.setExpiryDate(expiryDate);
         batch.setQuantity(quantity);
+        batch.setUnitCost(unitCost);
         return expiryBatchRepository.save(batch);
     }
 }

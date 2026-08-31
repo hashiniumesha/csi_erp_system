@@ -6,6 +6,7 @@ import erp_backend.service.QCService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import java.time.LocalDate;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api")
@@ -15,6 +16,35 @@ public class QCController {
     @Autowired private SupplierRepository supplierRepository;
     @Autowired private RawMaterialRepository rawMaterialRepository;
     @Autowired private AppUserRepository appUserRepository;
+    @Autowired private GRNRepository grnRepository;
+
+    // List endpoints — used to populate dropdown/select fields on the frontend
+    // instead of requiring users to type in raw numeric IDs.
+    @GetMapping("/suppliers")
+    public List<Supplier> listSuppliers() {
+        return supplierRepository.findAll();
+    }
+
+    @GetMapping("/raw-materials")
+    public List<RawMaterial> listRawMaterials() {
+        return rawMaterialRepository.findAll();
+    }
+
+    // GRN history doubles as the raw-material "batch" record: each row already
+    // carries the price (UnitCost) and date (DateReceived) for that delivery,
+    // which is what distinguishes one batch from another once stock is pooled.
+    @GetMapping("/qc/grns")
+    public List<GRN> listGrns() {
+        return grnRepository.findAll();
+    }
+
+    // Batch history for one specific raw material — every delivery of this
+    // material, each carrying its own price and date, instead of the single
+    // pooled CurrentStock number on RawMaterial itself.
+    @GetMapping("/raw-materials/{id}/batches")
+    public List<GRN> listBatchesForRawMaterial(@PathVariable Integer id) {
+        return grnRepository.findByRawMaterial_RawMaterialId(id);
+    }
 
     public static class GRNRequest {
         public Integer supplierId;
