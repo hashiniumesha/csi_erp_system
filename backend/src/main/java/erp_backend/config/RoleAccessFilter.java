@@ -39,14 +39,27 @@ public class RoleAccessFilter extends OncePerRequestFilter {
             "/api/sales", List.of("Sales Officer")
     );
 
+    // Unlike RESTRICTED_PREFIXES, these are exact method+path matches, not
+    // prefixes — GET /api/users stays open to every role (it backs the
+    // officer-picker dropdowns on every dashboard), but creating an account
+    // is Admin-only, on the backend as well as being hidden from the UI for
+    // every other role.
+    private static final List<String> ADMIN_ONLY_EXACT = List.of("POST /api/users");
+
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws ServletException, IOException {
 
         String path = request.getRequestURI();
+        String role = request.getHeader("X-User-Role");
 
         if (PUBLIC_PATHS.stream().anyMatch(path::startsWith)) {
             chain.doFilter(request, response);
+            return;
+        }
+
+        if (ADMIN_ONLY_EXACT.contains(request.getMethod() + " " + path) && !"Admin".equals(role)) {
+            forbidden(response);
             return;
         }
 
@@ -56,13 +69,10 @@ public class RoleAccessFilter extends OncePerRequestFilter {
                 .orElse(null);
 
         if (matchedPrefix != null) {
-            String role = request.getHeader("X-User-Role");
             List<String> allowedRoles = RESTRICTED_PREFIXES.get(matchedPrefix);
             boolean allowed = "Admin".equals(role) || (role != null && allowedRoles.contains(role));
             if (!allowed) {
-                response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-                response.setContentType("application/json");
-                response.getWriter().write("{\"message\":\"You don't have permission to do that.\"}");
+                forbidden(response);
                 return;
             }
         }
@@ -71,5 +81,11 @@ public class RoleAccessFilter extends OncePerRequestFilter {
         // /api/suppliers, /api/raw-materials, /api/users used to populate
         // dropdowns across every dashboard) are open to any logged-in role.
         chain.doFilter(request, response);
+    }
+
+    private void forbidden(HttpServletResponse response) throws IOException {
+        response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+        response.setContentType("application/json");
+        response.getWriter().write("{\"message\":\"You don't have permission to do that.\"}");
     }
 }
