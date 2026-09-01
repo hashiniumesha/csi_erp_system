@@ -35,6 +35,8 @@ public class DashboardShell {
         String role = Session.getRoleName();
         boolean admin = Session.isAdmin();
 
+        modules.put("Dashboard", DashboardHomeView::build);
+
         if (admin || "QC Officer".equals(role)) {
             modules.put("Production / QC", QCView::build);
         }
