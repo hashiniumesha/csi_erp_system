@@ -30,6 +30,7 @@ public class DashboardController {
         public long totalCustomers;
         public long invoicesToday;
         public double salesTotalToday;
+        public double salesTotalThisMonth;
         public double totalOutstandingBalance;
     }
 
@@ -62,6 +63,12 @@ public class DashboardController {
         s.invoicesToday = invoices.stream().filter(i -> today.equals(i.getInvoiceDate())).count();
         s.salesTotalToday = invoices.stream()
                 .filter(i -> today.equals(i.getInvoiceDate()))
+                .mapToDouble(i -> i.getTotalAmount() != null ? i.getTotalAmount() : 0.0)
+                .sum();
+        s.salesTotalThisMonth = invoices.stream()
+                .filter(i -> i.getInvoiceDate() != null
+                        && i.getInvoiceDate().getMonthValue() == today.getMonthValue()
+                        && i.getInvoiceDate().getYear() == today.getYear())
                 .mapToDouble(i -> i.getTotalAmount() != null ? i.getTotalAmount() : 0.0)
                 .sum();
 

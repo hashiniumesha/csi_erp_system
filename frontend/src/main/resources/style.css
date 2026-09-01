@@ -202,6 +202,26 @@
     -fx-padding: 16;
 }
 
+/* ---------- charts (pie/bar series recolored to the palette,
+   JavaFX defaults to blue/orange otherwise) ---------- */
+.chart-pie .chart-pie-label {
+    -fx-fill: -csi-text-dark;
+}
+
+.chart-legend-item-symbol.default-color0 { -fx-background-color: -csi-accent; }
+.chart-legend-item-symbol.default-color1 { -fx-background-color: -csi-sidebar-bg-active; }
+.chart-legend-item-symbol.default-color2 { -fx-background-color: -csi-sage; }
+
+.default-color0.chart-pie { -fx-pie-color: -csi-accent; }
+.default-color1.chart-pie { -fx-pie-color: -csi-sidebar-bg-active; }
+.default-color2.chart-pie { -fx-pie-color: -csi-cream; }
+
+.default-color0.chart-bar { -fx-bar-fill: -csi-accent; }
+.default-color1.chart-bar { -fx-bar-fill: -csi-sage; }
+
+.axis-tick-mark, .axis-minor-tick-mark { -fx-stroke: -csi-border; }
+.axis { -fx-tick-label-fill: -csi-text-muted; }
+
 /* ---------- status / error / success messages ---------- */
 .status-error {
     -fx-text-fill: -csi-danger;
