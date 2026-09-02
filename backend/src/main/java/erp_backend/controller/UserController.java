@@ -1,8 +1,11 @@
 package erp_backend.controller;
 
 import erp_backend.entity.AppUser;
+import erp_backend.entity.Role;
 import erp_backend.repository.AppUserRepository;
+import erp_backend.repository.RoleRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -12,10 +15,9 @@ import java.util.List;
 public class UserController {
 
     @Autowired private AppUserRepository appUserRepository;
+    @Autowired private RoleRepository roleRepository;
+    @Autowired private PasswordEncoder passwordEncoder;
 
-    // Lightweight projection — deliberately excludes passwordHash, unlike the
-    // raw AppUser entity, since this list is used to populate officer-picker
-    // dropdowns (QC Officer, Sales Officer) and must be safe to expose broadly.
     public static class UserSummary {
         public Integer userId;
         public String username;
@@ -24,9 +26,31 @@ public class UserController {
         public String status;
     }
 
+    public static class CreateUserRequest {
+        public String fullName;
+        public String username;
+        public String password;
+        public Integer roleId;
+    }
+
     @GetMapping
     public List<UserSummary> listUsers() {
         return appUserRepository.findAll().stream().map(UserController::toSummary).toList();
+    }
+
+    @PostMapping
+    public UserSummary createUser(@RequestBody CreateUserRequest request) {
+        Role role = roleRepository.findById(request.roleId)
+                .orElseThrow(() -> new RuntimeException("Role not found"));
+
+        AppUser user = new AppUser();
+        user.setFullName(request.fullName);
+        user.setUsername(request.username);
+        user.setPasswordHash(passwordEncoder.encode(request.password));
+        user.setRole(role);
+        user.setStatus(AppUser.Status.Active);
+
+        return toSummary(appUserRepository.save(user));
     }
 
     private static UserSummary toSummary(AppUser user) {
