@@ -126,11 +126,23 @@
     -fx-border-color: -csi-border;
     -fx-border-radius: 6;
     -fx-background-radius: 6;
-    -fx-padding: 6 10 6 10;
+    -fx-padding: 4 8 4 8;
+    -fx-pref-width: 260;
+    -fx-max-width: 260;
+    -fx-font-size: 12px;
 }
 
 .text-field:focused, .combo-box:focused, .date-picker:focused {
     -fx-border-color: -csi-accent;
+}
+
+/* A field container (see DashboardHomeView-style card layouts) that
+   should still stretch full-width - e.g. a search box, or a field row
+   feeding a live preview panel - opts back in with this class rather
+   than every field defaulting to full width. */
+.field-wide, .field-wide .text-field, .field-wide .combo-box, .field-wide .date-picker {
+    -fx-pref-width: 420;
+    -fx-max-width: 420;
 }
 
 .field-label {
