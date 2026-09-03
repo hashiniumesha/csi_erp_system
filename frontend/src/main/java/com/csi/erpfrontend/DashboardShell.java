@@ -6,6 +6,8 @@ import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
@@ -57,10 +59,18 @@ public class DashboardShell {
         sidebar.getStyleClass().add("sidebar");
         sidebar.setPrefWidth(220);
 
+        ImageView logo = new ImageView(new Image(DashboardShell.class.getResourceAsStream("/csi-logo.png")));
+        logo.setFitWidth(36);
+        logo.setFitHeight(36);
+        logo.setPreserveRatio(true);
+
         Label brand = new Label("Ceylon Sweets Island");
         brand.getStyleClass().add("sidebar-brand");
         brand.setWrapText(true);
-        brand.setPadding(new Insets(0, 24, 16, 24));
+
+        HBox brandRow = new HBox(10, logo, brand);
+        brandRow.setAlignment(Pos.CENTER_LEFT);
+        brandRow.setPadding(new Insets(0, 24, 16, 24));
 
         Label avatar = new Label(initials(Session.getFullName()));
         avatar.getStyleClass().add("sidebar-avatar");
@@ -80,7 +90,7 @@ public class DashboardShell {
         identity.setAlignment(Pos.CENTER_LEFT);
         identity.setPadding(new Insets(0, 24, 24, 24));
 
-        sidebar.getChildren().addAll(brand, identity);
+        sidebar.getChildren().addAll(brandRow, identity);
 
         Button[] activeButton = new Button[1];
         for (Map.Entry<String, Supplier<Node>> entry : modules.entrySet()) {

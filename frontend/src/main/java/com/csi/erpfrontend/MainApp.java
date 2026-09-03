@@ -1,6 +1,7 @@
 package com.csi.erpfrontend;
 
 import javafx.application.Application;
+import javafx.scene.image.Image;
 import javafx.stage.Stage;
 
 /**
@@ -13,6 +14,7 @@ public class MainApp extends Application {
 
     @Override
     public void start(Stage primaryStage) {
+        primaryStage.getIcons().add(new Image(MainApp.class.getResourceAsStream("/csi-logo.png")));
         primaryStage.setTitle("Ceylon Sweets Island ERP - Login");
         primaryStage.setScene(LoginView.build(primaryStage));
         primaryStage.show();

@@ -7,6 +7,8 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
@@ -15,6 +17,11 @@ import org.json.JSONObject;
 public class LoginView {
 
     public static Scene build(Stage stage) {
+        ImageView logo = new ImageView(new Image(LoginView.class.getResourceAsStream("/csi-logo.png")));
+        logo.setFitWidth(64);
+        logo.setFitHeight(64);
+        logo.setPreserveRatio(true);
+
         Label brand = new Label("Ceylon Sweets Island");
         brand.getStyleClass().add("page-title");
 
@@ -74,7 +81,7 @@ public class LoginView {
         passwordField.setOnAction(e -> attemptLogin.run());
 
         VBox card = new VBox(14,
-                brand, subtitle,
+                logo, brand, subtitle,
                 spacer(10),
                 usernameLabel, usernameField,
                 passwordLabel, passwordField,
