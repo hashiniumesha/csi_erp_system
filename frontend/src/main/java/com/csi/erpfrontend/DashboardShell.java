@@ -1,11 +1,13 @@
 package com.csi.erpfrontend;
 
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
@@ -58,15 +60,27 @@ public class DashboardShell {
         Label brand = new Label("Ceylon Sweets Island");
         brand.getStyleClass().add("sidebar-brand");
         brand.setWrapText(true);
-        brand.setPadding(new Insets(0, 24, 4, 24));
+        brand.setPadding(new Insets(0, 24, 16, 24));
 
-        Label roleLabel = new Label((Session.getFullName() != null ? Session.getFullName() : "") +
-                (role != null ? "  ·  " + role : ""));
+        Label avatar = new Label(initials(Session.getFullName()));
+        avatar.getStyleClass().add("sidebar-avatar");
+        avatar.setMinSize(44, 44);
+        avatar.setMaxSize(44, 44);
+        avatar.setAlignment(Pos.CENTER);
+
+        Label fullName = new Label(Session.getFullName() != null ? Session.getFullName() : "");
+        fullName.getStyleClass().add("sidebar-name");
+        fullName.setWrapText(true);
+
+        Label roleLabel = new Label(role != null ? role : "");
         roleLabel.getStyleClass().add("sidebar-role");
-        roleLabel.setWrapText(true);
-        roleLabel.setPadding(new Insets(0, 24, 24, 24));
 
-        sidebar.getChildren().addAll(brand, roleLabel);
+        VBox identityText = new VBox(2, fullName, roleLabel);
+        HBox identity = new HBox(10, avatar, identityText);
+        identity.setAlignment(Pos.CENTER_LEFT);
+        identity.setPadding(new Insets(0, 24, 24, 24));
+
+        sidebar.getChildren().addAll(brand, identity);
 
         Button[] activeButton = new Button[1];
         for (Map.Entry<String, Supplier<Node>> entry : modules.entrySet()) {
@@ -116,5 +130,17 @@ public class DashboardShell {
         Scene scene = new Scene(root, 1000, 680);
         scene.getStylesheets().add(DashboardShell.class.getResource("/style.css").toExternalForm());
         return scene;
+    }
+
+    // "Priyantha Silva" -> "PS". Falls back to a single "?" if the name is
+    // missing rather than showing an empty circle.
+    private static String initials(String fullName) {
+        if (fullName == null || fullName.isBlank()) return "?";
+        String[] parts = fullName.trim().split("\\s+");
+        StringBuilder result = new StringBuilder();
+        for (int i = 0; i < parts.length && result.length() < 2; i++) {
+            if (!parts[i].isEmpty()) result.append(Character.toUpperCase(parts[i].charAt(0)));
+        }
+        return result.length() > 0 ? result.toString() : "?";
     }
 }

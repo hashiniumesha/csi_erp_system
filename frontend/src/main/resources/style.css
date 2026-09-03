@@ -79,9 +79,23 @@
     -fx-font-weight: bold;
 }
 
+.sidebar-name {
+    -fx-text-fill: -csi-text-on-sidebar;
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+}
+
 .sidebar-role {
     -fx-text-fill: -csi-text-on-sidebar-muted;
     -fx-font-size: 11px;
+}
+
+.sidebar-avatar {
+    -fx-background-color: -csi-accent;
+    -fx-background-radius: 999;
+    -fx-text-fill: white;
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
 }
 
 .sidebar-nav-button {
