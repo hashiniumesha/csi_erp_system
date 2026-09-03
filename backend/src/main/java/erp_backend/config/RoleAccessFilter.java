@@ -39,12 +39,19 @@ public class RoleAccessFilter extends OncePerRequestFilter {
             "/api/sales", List.of("Sales Officer")
     );
 
-    // Unlike RESTRICTED_PREFIXES, these are exact method+path matches, not
-    // prefixes — GET /api/users stays open to every role (it backs the
-    // officer-picker dropdowns on every dashboard), but creating an account
-    // is Admin-only, on the backend as well as being hidden from the UI for
-    // every other role.
-    private static final List<String> ADMIN_ONLY_EXACT = List.of("POST /api/users");
+    // Unlike RESTRICTED_PREFIXES, these are keyed by "METHOD /path/prefix"
+    // and matched with startsWith on method+path together — this is what
+    // lets a specific method on a path be locked down while other methods
+    // on that same path (usually GET, backing a dropdown used across
+    // several dashboards) stay open to every role. Values follow the same
+    // convention as RESTRICTED_PREFIXES: Admin is implicitly allowed and
+    // never needs to be listed; an empty list means Admin-only.
+    private static final Map<String, List<String>> METHOD_PATH_RESTRICTIONS = Map.of(
+            "POST /api/users", List.of(),
+            "POST /api/raw-materials", List.of("Inventory Manager"),
+            "PUT /api/raw-materials/", List.of("Inventory Manager"),
+            "DELETE /api/raw-materials/", List.of("Inventory Manager")
+    );
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
@@ -52,15 +59,25 @@ public class RoleAccessFilter extends OncePerRequestFilter {
 
         String path = request.getRequestURI();
         String role = request.getHeader("X-User-Role");
+        String methodPath = request.getMethod() + " " + path;
 
         if (PUBLIC_PATHS.stream().anyMatch(path::startsWith)) {
             chain.doFilter(request, response);
             return;
         }
 
-        if (ADMIN_ONLY_EXACT.contains(request.getMethod() + " " + path) && !"Admin".equals(role)) {
-            forbidden(response);
-            return;
+        String matchedMethodPath = METHOD_PATH_RESTRICTIONS.keySet().stream()
+                .filter(methodPath::startsWith)
+                .findFirst()
+                .orElse(null);
+
+        if (matchedMethodPath != null) {
+            List<String> allowedRoles = METHOD_PATH_RESTRICTIONS.get(matchedMethodPath);
+            boolean allowed = "Admin".equals(role) || (role != null && allowedRoles.contains(role));
+            if (!allowed) {
+                forbidden(response);
+                return;
+            }
         }
 
         String matchedPrefix = RESTRICTED_PREFIXES.keySet().stream()
