@@ -44,6 +44,15 @@ public class ApiClient {
         return send("POST", path, body.toString());
     }
 
+    public static JSONObject put(String path, JSONObject body) {
+        String responseBody = send("PUT", path, body.toString());
+        return responseBody.isBlank() ? new JSONObject() : new JSONObject(responseBody);
+    }
+
+    public static void delete(String path) {
+        send("DELETE", path, null);
+    }
+
     private static String get(String path) {
         return send("GET", path, null);
     }
@@ -60,6 +69,8 @@ public class ApiClient {
 
             HttpRequest request = switch (method) {
                 case "POST" -> builder.POST(HttpRequest.BodyPublishers.ofString(jsonBody)).build();
+                case "PUT" -> builder.PUT(HttpRequest.BodyPublishers.ofString(jsonBody)).build();
+                case "DELETE" -> builder.DELETE().build();
                 default -> builder.GET().build();
             };
 
