@@ -36,7 +36,11 @@ public class RoleAccessFilter extends OncePerRequestFilter {
             "/api/qc", List.of("QC Officer"),
             "/api/grn", List.of("QC Officer"),
             "/api/inventory", List.of("Inventory Manager"),
-            "/api/sales", List.of("Sales Officer")
+            "/api/sales", List.of("Sales Officer"),
+            // Deliberately QC Officer here, not Inventory Manager - Admin
+            // and QC review damage/wastage, even though Inventory Manager
+            // is who records it via /api/inventory/damaged.
+            "/api/damaged-products", List.of("QC Officer")
     );
 
     // Unlike RESTRICTED_PREFIXES, these are keyed by "METHOD /path/prefix"
