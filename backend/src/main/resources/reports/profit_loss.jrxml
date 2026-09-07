@@ -3,7 +3,8 @@
               xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
               xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd"
               name="profit_loss" pageWidth="595" pageHeight="842" columnWidth="535"
-              leftMargin="30" rightMargin="30" topMargin="30" bottomMargin="30">
+              leftMargin="30" rightMargin="30" topMargin="30" bottomMargin="30"
+              whenNoDataType="AllSectionsNoDetail">
 
     <!--
       Profit & Loss report, per proposal section 5.7: "Monthly income vs.
