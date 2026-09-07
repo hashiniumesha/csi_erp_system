@@ -18,6 +18,8 @@ public class DashboardController {
     @Autowired private FinishedProductRepository finishedProductRepository;
     @Autowired private CustomerRepository customerRepository;
     @Autowired private InvoiceRepository invoiceRepository;
+    @Autowired private FinishedProductStockMovementRepository finishedProductStockMovementRepository;
+    @Autowired private DamagedProductRepository damagedProductRepository;
 
     public static class DashboardSummary {
         public long totalUsers;
@@ -32,6 +34,9 @@ public class DashboardController {
         public double salesTotalToday;
         public double salesTotalThisMonth;
         public double totalOutstandingBalance;
+        public long stockInMovementCount;
+        public long stockOutMovementCount;
+        public long damagedProductRecordCount;
     }
 
     @GetMapping("/summary")
@@ -75,6 +80,14 @@ public class DashboardController {
         s.totalOutstandingBalance = customerRepository.findAll().stream()
                 .mapToDouble(c -> c.getOutstandingBalance() != null ? c.getOutstandingBalance() : 0.0)
                 .sum();
+
+        List<FinishedProductStockMovement> movements = finishedProductStockMovementRepository.findAll();
+        s.stockInMovementCount = movements.stream()
+                .filter(m -> m.getMovementType() == FinishedProductStockMovement.MovementType.IN).count();
+        s.stockOutMovementCount = movements.stream()
+                .filter(m -> m.getMovementType() == FinishedProductStockMovement.MovementType.OUT).count();
+
+        s.damagedProductRecordCount = damagedProductRepository.count();
 
         return s;
     }
