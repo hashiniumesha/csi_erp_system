@@ -86,6 +86,7 @@ public class ApprovalRequestService {
                 material.setName(payload.getString("name"));
                 material.setCurrentStock(0.0);
                 material.setReorderLevel(payload.optDouble("reorderLevel", 0.0));
+                material.setUnitOfMeasure(payload.optString("unitOfMeasure", null));
                 rawMaterialRepository.save(material);
             }
             case UPDATE -> {
@@ -93,6 +94,9 @@ public class ApprovalRequestService {
                         .orElseThrow(() -> new RuntimeException("Raw material not found"));
                 material.setName(payload.getString("name"));
                 material.setReorderLevel(payload.optDouble("reorderLevel", material.getReorderLevel()));
+                if (payload.has("unitOfMeasure")) {
+                    material.setUnitOfMeasure(payload.optString("unitOfMeasure", material.getUnitOfMeasure()));
+                }
                 rawMaterialRepository.save(material);
             }
             case DELETE -> rawMaterialRepository.deleteById(request.getEntityId());

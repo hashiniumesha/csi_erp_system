@@ -15,6 +15,7 @@ public class RawMaterialController {
     public static class RawMaterialRequest {
         public String name;
         public Double reorderLevel;
+        public String unitOfMeasure;
     }
 
     @PostMapping
@@ -23,6 +24,7 @@ public class RawMaterialController {
         material.setName(request.name);
         material.setCurrentStock(0.0);
         material.setReorderLevel(request.reorderLevel != null ? request.reorderLevel : 0.0);
+        material.setUnitOfMeasure(request.unitOfMeasure);
         return rawMaterialRepository.save(material);
     }
 
@@ -32,6 +34,9 @@ public class RawMaterialController {
                 .orElseThrow(() -> new RuntimeException("Raw material not found"));
         material.setName(request.name);
         material.setReorderLevel(request.reorderLevel != null ? request.reorderLevel : material.getReorderLevel());
+        if (request.unitOfMeasure != null) {
+            material.setUnitOfMeasure(request.unitOfMeasure);
+        }
         return rawMaterialRepository.save(material);
     }
 

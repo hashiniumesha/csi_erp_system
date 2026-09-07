@@ -89,9 +89,31 @@ public class SalesController {
         );
     }
 
+    // Safe projection — the raw Invoice entity nests the full AppUser as
+    // salesOfficer, which was serializing passwordHash straight into the
+    // JSON response (the same reason every other list endpoint in this
+    // app avoids returning entities that carry a nested AppUser directly).
+    public static class InvoiceSummary {
+        public Integer invoiceId;
+        public String customerName;
+        public String salesOfficerName;
+        public String invoiceDate;
+        public String paymentType;
+        public Double totalAmount;
+    }
+
     @GetMapping("/invoices")
-    public List<Invoice> listInvoices() {
-        return invoiceRepository.findAll();
+    public List<InvoiceSummary> listInvoices() {
+        return invoiceRepository.findAll().stream().map(i -> {
+            InvoiceSummary s = new InvoiceSummary();
+            s.invoiceId = i.getInvoiceId();
+            s.customerName = i.getCustomer() != null ? i.getCustomer().getName() : "?";
+            s.salesOfficerName = i.getSalesOfficer() != null ? i.getSalesOfficer().getFullName() : "?";
+            s.invoiceDate = i.getInvoiceDate() != null ? i.getInvoiceDate().toString() : null;
+            s.paymentType = i.getPaymentType() != null ? i.getPaymentType().name() : null;
+            s.totalAmount = i.getTotalAmount();
+            return s;
+        }).toList();
     }
 
     @PostMapping("/route")

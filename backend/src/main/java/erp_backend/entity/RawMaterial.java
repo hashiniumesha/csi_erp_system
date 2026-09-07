@@ -19,6 +19,11 @@ public class RawMaterial {
     @Column(name = "ReorderLevel")
     private Double reorderLevel = 0.0;
 
+    // Column already existed in the database (e.g. "kg", "L") but was
+    // never mapped here, so it was invisible to the whole application.
+    @Column(name = "UnitOfMeasure")
+    private String unitOfMeasure;
+
     public Integer getRawMaterialId() { return rawMaterialId; }
     public void setRawMaterialId(Integer rawMaterialId) { this.rawMaterialId = rawMaterialId; }
     public String getName() { return name; }
@@ -27,5 +32,6 @@ public class RawMaterial {
     public void setCurrentStock(Double currentStock) { this.currentStock = currentStock; }
     public Double getReorderLevel() { return reorderLevel; }
     public void setReorderLevel(Double reorderLevel) { this.reorderLevel = reorderLevel; }
-    
+    public String getUnitOfMeasure() { return unitOfMeasure; }
+    public void setUnitOfMeasure(String unitOfMeasure) { this.unitOfMeasure = unitOfMeasure; }
 }

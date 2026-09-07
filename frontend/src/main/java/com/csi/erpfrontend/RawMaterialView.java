@@ -22,6 +22,8 @@ public class RawMaterialView {
         @Override public String toString() { return label; }
     }
 
+    private static final String[] UNIT_TYPES = { "kg", "g", "L", "ml", "pcs", "packets", "bundles" };
+
     public static Node build() {
         Label title = new Label("Raw Materials");
         title.getStyleClass().add("page-title");
@@ -46,38 +48,48 @@ public class RawMaterialView {
         nameField.setPromptText("e.g. Sugar");
         Spinner<Double> reorderSpinner = new Spinner<>(0.0, 100000.0, 0.0, 1.0);
         reorderSpinner.setEditable(true);
+        ComboBox<String> unitBox = new ComboBox<>();
+        unitBox.setEditable(true);
+        unitBox.getItems().addAll(UNIT_TYPES);
+        unitBox.setPromptText("Select or type a unit");
 
         Button requestButton = new Button("Request");
         requestButton.getStyleClass().add("button-primary");
         Label statusLabel = newHiddenStatusLabel();
 
         VBox inputs = new VBox(10, sectionTitle,
-                labeled("Name", nameField), labeled("Reorder level", reorderSpinner),
+                labeled("Name", nameField), labeled("Reorder level", reorderSpinner), labeled("Unit type", unitBox),
                 requestButton, statusLabel);
         inputs.getStyleClass().add("card");
 
         VBox preview = FormLayout.previewCard("Preview");
         Label nameValue = FormLayout.newPreviewValue();
         Label reorderValue = FormLayout.newPreviewValue();
+        Label unitValue = FormLayout.newPreviewValue();
         preview.getChildren().addAll(
                 FormLayout.previewRow("Name", nameValue),
-                FormLayout.previewRow("Reorder level", reorderValue)
+                FormLayout.previewRow("Reorder level", reorderValue),
+                FormLayout.previewRow("Unit type", unitValue)
         );
         nameField.textProperty().addListener((obs, o, n) -> nameValue.setText(n == null || n.isBlank() ? "—" : n));
         reorderSpinner.valueProperty().addListener((obs, o, n) -> reorderValue.setText(n != null ? String.valueOf(n) : "—"));
+        unitBox.getEditor().textProperty().addListener((obs, o, n) -> unitValue.setText(n == null || n.isBlank() ? "—" : n));
 
         requestButton.setOnAction(e -> {
             if (nameField.getText().isBlank()) { showError(statusLabel, "Enter a name."); return; }
             double reorderLevel = reorderSpinner.getValue() != null ? reorderSpinner.getValue() : 0.0;
+            String unit = unitBox.getEditor().getText();
 
             try {
                 JSONObject payload = new JSONObject();
                 payload.put("name", nameField.getText().trim());
                 payload.put("reorderLevel", reorderLevel);
+                if (unit != null && !unit.isBlank()) payload.put("unitOfMeasure", unit.trim());
                 submitRequest("CREATE", null, payload);
                 showSuccess(statusLabel, "Request submitted. Please wait for a response from the Admin.");
                 nameField.clear();
                 reorderSpinner.getValueFactory().setValue(0.0);
+                unitBox.getEditor().clear(); unitBox.setValue(null);
             } catch (ApiClient.ApiException ex) {
                 showError(statusLabel, ex.getMessage());
             }
@@ -98,6 +110,10 @@ public class RawMaterialView {
         nameField.setPromptText("Name");
         Spinner<Double> reorderSpinner = new Spinner<>(0.0, 100000.0, 0.0, 1.0);
         reorderSpinner.setEditable(true);
+        ComboBox<String> unitBox = new ComboBox<>();
+        unitBox.setEditable(true);
+        unitBox.getItems().addAll(UNIT_TYPES);
+        unitBox.setPromptText("Select or type a unit");
         Label currentStockLabel = new Label();
         currentStockLabel.getStyleClass().add("muted-label");
         Label statusLabel = newHiddenStatusLabel();
@@ -125,6 +141,7 @@ public class RawMaterialView {
                 nameField.setText(m.getString("name"));
                 reorderSpinner.getValueFactory().setValue(m.optDouble("reorderLevel", 0));
                 currentStockLabel.setText("Current stock: " + m.optDouble("currentStock", 0));
+                unitBox.setValue(m.optString("unitOfMeasure", null));
             }
         });
 
@@ -135,7 +152,7 @@ public class RawMaterialView {
 
         VBox inputs = new VBox(10, sectionTitle,
                 labeled("Raw material", materialBox), currentStockLabel,
-                labeled("Name", nameField), labeled("Reorder level", reorderSpinner),
+                labeled("Name", nameField), labeled("Reorder level", reorderSpinner), labeled("Unit type", unitBox),
                 new HBox(10, requestChangeButton, requestDeleteButton), statusLabel);
         inputs.getStyleClass().add("card");
 
@@ -143,27 +160,32 @@ public class RawMaterialView {
         Label materialValue = FormLayout.newPreviewValue();
         Label nameValue = FormLayout.newPreviewValue();
         Label reorderValue = FormLayout.newPreviewValue();
+        Label unitValue = FormLayout.newPreviewValue();
         Label stockValue = FormLayout.newPreviewValue();
         preview.getChildren().addAll(
                 FormLayout.previewRow("Raw material", materialValue),
                 FormLayout.previewRow("New name", nameValue),
                 FormLayout.previewRow("New reorder level", reorderValue),
+                FormLayout.previewRow("New unit type", unitValue),
                 FormLayout.previewRow("Current stock", stockValue)
         );
         materialBox.valueProperty().addListener((obs, o, n) -> materialValue.setText(n != null ? n.toString() : "—"));
         nameField.textProperty().addListener((obs, o, n) -> nameValue.setText(n == null || n.isBlank() ? "—" : n));
         reorderSpinner.valueProperty().addListener((obs, o, n) -> reorderValue.setText(n != null ? String.valueOf(n) : "—"));
+        unitBox.getEditor().textProperty().addListener((obs, o, n) -> unitValue.setText(n == null || n.isBlank() ? "—" : n));
         currentStockLabel.textProperty().addListener((obs, o, n) -> stockValue.setText(n == null || n.isBlank() ? "—" : n));
 
         requestChangeButton.setOnAction(e -> {
             if (materialBox.getValue() == null) { showError(statusLabel, "Select a raw material first."); return; }
             if (nameField.getText().isBlank()) { showError(statusLabel, "Enter a name."); return; }
             double reorderLevel = reorderSpinner.getValue() != null ? reorderSpinner.getValue() : 0.0;
+            String unit = unitBox.getEditor().getText();
 
             try {
                 JSONObject payload = new JSONObject();
                 payload.put("name", nameField.getText().trim());
                 payload.put("reorderLevel", reorderLevel);
+                payload.put("unitOfMeasure", unit != null ? unit.trim() : "");
                 submitRequest("UPDATE", materialBox.getValue().id(), payload);
                 showSuccess(statusLabel, "Request submitted. Please wait for a response from the Admin.");
             } catch (ApiClient.ApiException ex) {

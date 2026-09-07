@@ -3,18 +3,16 @@ package com.csi.erpfrontend;
 import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.control.*;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * Sales & Billing module.
- *
- * DAY 2 TODO (see QCView for the pattern to follow): swap the raw numeric
- * ID TextFields (Customer, Sales Officer, Product) for ComboBoxes bound to
- * GET /api/sales/customers, GET /api/users, and
- * GET /api/inventory/finished-products, and add a Payment Type dropdown
- * validation message consistent with QCView's.
  */
 public class SalesView {
 
@@ -29,7 +27,11 @@ public class SalesView {
         Label title = new Label("Sales & Billing");
         title.getStyleClass().add("page-title");
 
-        VBox layout = new VBox(20, title, buildCustomerCard(), buildInvoiceCard(), buildCollectionCard());
+        VBox invoiceList = new VBox(8);
+        refreshInvoiceList(invoiceList);
+
+        VBox layout = new VBox(20, title, buildCustomerCard(), buildInvoiceCard(invoiceList), buildCollectionCard(),
+                buildInvoiceListCard(invoiceList));
         layout.setPadding(new Insets(28));
 
         ScrollPane scrollPane = new ScrollPane(layout);
@@ -78,7 +80,7 @@ public class SalesView {
         return card;
     }
 
-        private static VBox buildInvoiceCard() {
+        private static VBox buildInvoiceCard(VBox invoiceList) {
         Label sectionTitle = new Label("Create Invoice (single item)");
         sectionTitle.getStyleClass().add("section-title");
 
@@ -94,6 +96,7 @@ public class SalesView {
         productBox.setPromptText("Select product");
         productBox.setMaxWidth(Double.MAX_VALUE);
 
+        Map<Integer, String> productUnits = new HashMap<>();
         try {
             for (Object o : ApiClient.getArray("/api/sales/customers")) {
                 JSONObject c = (JSONObject) o;
@@ -108,6 +111,7 @@ public class SalesView {
             for (Object o : ApiClient.getArray("/api/inventory/finished-products")) {
                 JSONObject p = (JSONObject) o;
                 productBox.getItems().add(new Option(p.getInt("productId"), p.getString("name")));
+                productUnits.put(p.getInt("productId"), p.optString("unitOfMeasure", null));
             }
         } catch (ApiClient.ApiException e) {
             customerBox.setPromptText("Couldn't load customers");
@@ -121,6 +125,17 @@ public class SalesView {
         paymentTypeBox.setMaxWidth(Double.MAX_VALUE);
         TextField quantityField = new TextField();
         quantityField.setPromptText("e.g. 10");
+
+        // Read-only, sourced from the product's own stored unit (set when
+        // it was added in Inventory) rather than a second, disconnected
+        // dropdown that wouldn't actually be saved anywhere on the invoice.
+        Label quantityUnitHint = new Label();
+        quantityUnitHint.getStyleClass().add("muted-label");
+        productBox.valueProperty().addListener((obs, o, n) -> {
+            String unit = n != null ? productUnits.get(n.id()) : null;
+            quantityUnitHint.setText(unit != null && !unit.isBlank() ? "Unit: " + unit : "Unit not set for this product");
+        });
+
         TextField priceField = new TextField();
         priceField.setPromptText("Unit price, e.g. 150.00");
 
@@ -153,6 +168,7 @@ public class SalesView {
                 JSONObject response = ApiClient.post("/api/sales/invoice", body);
                 showSuccess(statusLabel, "Invoice created — ID " + response.getInt("invoiceId") +
                         ", total " + response.getDouble("totalAmount") + ".");
+                refreshInvoiceList(invoiceList);
             } catch (ApiClient.ApiException ex) {
                 showError(statusLabel, ex.getMessage());
             }
@@ -161,7 +177,7 @@ public class SalesView {
         VBox card = new VBox(10, sectionTitle,
                 labeled("Customer", customerBox), labeled("Sales officer", officerBox),
                 labeled("Payment type", paymentTypeBox), labeled("Product", productBox),
-                labeled("Quantity", quantityField), labeled("Unit price", priceField),
+                labeled("Quantity", quantityField), quantityUnitHint, labeled("Unit price", priceField),
                 createButton, statusLabel);
         card.getStyleClass().add("card");
         return card;
@@ -190,8 +206,9 @@ public class SalesView {
 
             try {
                 JSONObject body = new JSONObject();
-                body.put("amountCollected", amount);
-                ApiClient.post("/api/sales/invoice/" + invoiceId + "/collection", body);
+                body.put("invoiceId", invoiceId);
+                body.put("amount", amount);
+                ApiClient.post("/api/sales/collection", body);
                 showSuccess(statusLabel, "Collection recorded.");
                 invoiceIdField.clear(); amountField.clear();
             } catch (ApiClient.ApiException ex) {
@@ -204,6 +221,56 @@ public class SalesView {
                 recordButton, statusLabel);
         card.getStyleClass().add("card");
         return card;
+    }
+
+    // Answers "where did the invoice go" - every invoice created (by
+    // anyone) shows up here, most recent last, so a Sales Officer can
+    // confirm their own invoices actually saved without needing a
+    // separate download/export.
+    private static VBox buildInvoiceListCard(VBox list) {
+        Label sectionTitle = new Label("Invoice List");
+        sectionTitle.getStyleClass().add("section-title");
+
+        VBox card = new VBox(10, sectionTitle, list);
+        card.getStyleClass().add("card");
+        return card;
+    }
+
+    private static void refreshInvoiceList(VBox list) {
+        list.getChildren().clear();
+        try {
+            JSONArray invoices = ApiClient.getArray("/api/sales/invoices");
+            if (invoices.isEmpty()) {
+                Label empty = new Label("No invoices yet.");
+                empty.getStyleClass().add("muted-label");
+                list.getChildren().add(empty);
+            }
+            for (int i = 0; i < invoices.length(); i++) {
+                list.getChildren().add(buildInvoiceRow(invoices.getJSONObject(i)));
+            }
+        } catch (ApiClient.ApiException e) {
+            Label error = new Label("Couldn't load invoices: " + e.getMessage());
+            error.getStyleClass().add("status-error");
+            list.getChildren().add(error);
+        }
+    }
+
+    private static HBox buildInvoiceRow(JSONObject inv) {
+        Label id = new Label("Invoice #" + inv.optInt("invoiceId"));
+        id.setStyle("-fx-font-weight: bold; -fx-min-width: 100;");
+        Label customer = new Label(inv.optString("customerName", "?"));
+        customer.setStyle("-fx-min-width: 220;");
+        Label officer = new Label(inv.optString("salesOfficerName", "?"));
+        officer.getStyleClass().add("muted-label");
+        officer.setStyle("-fx-min-width: 160;");
+        Label type = new Label(inv.optString("paymentType", "?"));
+        type.getStyleClass().add("muted-label");
+        type.setStyle("-fx-min-width: 70;");
+        Label total = new Label("Rs. " + String.format("%,.2f", inv.optDouble("totalAmount", 0)));
+        total.setStyle("-fx-min-width: 120;");
+        Label date = new Label(inv.optString("invoiceDate", "?"));
+        date.getStyleClass().add("muted-label");
+        return new HBox(16, id, customer, officer, type, total, date);
     }
 
     private static VBox labeled(String labelText, Control control) {

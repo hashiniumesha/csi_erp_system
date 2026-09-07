@@ -9,7 +9,9 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Production / QC module.
@@ -55,6 +57,7 @@ public class QCView {
         rawMaterialBox.setPromptText("Select raw material");
         rawMaterialBox.setMaxWidth(Double.MAX_VALUE);
 
+        Map<Integer, String> rawMaterialUnits = new HashMap<>();
         try {
             for (Object o : ApiClient.getArray("/api/suppliers")) {
                 JSONObject s = (JSONObject) o;
@@ -63,6 +66,7 @@ public class QCView {
             for (Object o : ApiClient.getArray("/api/raw-materials")) {
                 JSONObject r = (JSONObject) o;
                 rawMaterialBox.getItems().add(new Option(r.getInt("rawMaterialId"), r.getString("name")));
+                rawMaterialUnits.put(r.getInt("rawMaterialId"), r.optString("unitOfMeasure", null));
             }
         } catch (ApiClient.ApiException e) {
             supplierBox.setPromptText("Couldn't load suppliers");
@@ -71,6 +75,16 @@ public class QCView {
 
         TextField quantityField = new TextField();
         quantityField.setPromptText("e.g. 100");
+
+        // Read-only, sourced from the raw material's own stored unit
+        // (Raw Materials screen) rather than a second, disconnected
+        // dropdown that wouldn't actually be saved anywhere on a GRN.
+        Label quantityUnitHint = new Label();
+        quantityUnitHint.getStyleClass().add("muted-label");
+        rawMaterialBox.valueProperty().addListener((obs, o, n) -> {
+            String unit = n != null ? rawMaterialUnits.get(n.id()) : null;
+            quantityUnitHint.setText(unit != null && !unit.isBlank() ? "Unit: " + unit : "Unit not set for this material");
+        });
 
         TextField unitCostField = new TextField();
         unitCostField.setPromptText("Price per unit, e.g. 250.00");
@@ -112,6 +126,7 @@ public class QCView {
                 labeled("Supplier", supplierBox),
                 labeled("Raw material", rawMaterialBox),
                 labeled("Quantity received", quantityField),
+                quantityUnitHint,
                 labeled("Unit cost (price for this batch)", unitCostField),
                 submitButton,
                 statusLabel
