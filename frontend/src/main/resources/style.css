@@ -53,6 +53,15 @@
     -fx-background-repeat: no-repeat;
 }
 
+/* A ScrollPane paints its own "viewport" region on top of its content -
+   by default a near-white fill that was silently covering .inventory-bg's
+   image underneath it. This is what let the image show through. Scoped
+   to ScrollPane generally since a solid fill here was always invisible
+   against -csi-page-bg anyway - nothing else changes visually. */
+.scroll-pane > .viewport {
+    -fx-background-color: transparent;
+}
+
 .preview-card {
     -fx-background-color: rgba(250, 247, 239, 0.88);
     -fx-border-color: -csi-cream;
@@ -152,6 +161,19 @@
 
 .text-field:focused, .combo-box:focused, .date-picker:focused, .spinner:focused {
     -fx-border-color: -csi-accent;
+}
+
+/* An editable ComboBox/Spinner nests its own TextField inside for typing.
+   Without this, that inner field matches the ".text-field" rule above
+   too and gets a second competing border/background - the "two boxes"
+   look. The inner field becomes bare content filling its parent's box. */
+.combo-box .text-field, .spinner .text-field {
+    -fx-background-color: transparent;
+    -fx-background-insets: 0;
+    -fx-border-width: 0;
+    -fx-padding: 0;
+    -fx-pref-width: -1;
+    -fx-max-width: -1;
 }
 
 .spinner .increment-arrow-button, .spinner .decrement-arrow-button {

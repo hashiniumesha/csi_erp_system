@@ -21,7 +21,7 @@ public class InventoryView {
     private static final String[] CATEGORIES = {
             "Ice Bars", "Yogurt", "Soft Drink Cups", "Fruit Nectar", "Milk Packets", "Faluda"
     };
-    private static final String[] UNITS = { "pcs", "kg", "L", "packets", "bundles" };
+    private static final String[] UNIT_TYPES = { "pcs", "g", "kg", "ml", "L", "packets", "bundles" };
     private static final String[] DAMAGE_CAUSES = {
             "Pouch leak", "Dropped / mishandled", "Production defect", "Expired", "Transport damage", "Contamination"
     };
@@ -57,17 +57,25 @@ public class InventoryView {
         categoryBox.getItems().addAll(CATEGORIES);
         categoryBox.setPromptText("Select or type a category");
 
-        ComboBox<String> unitBox = new ComboBox<>();
-        unitBox.setEditable(true);
-        unitBox.getItems().addAll(UNITS);
-        unitBox.setPromptText("Select or type a unit");
+        // Unit of measure is really two things together - a size (e.g. 500)
+        // and a unit type (e.g. ml) - matching how products are actually
+        // described ("50ml Faluda ice packet", "10L milk packets"), rather
+        // than one free-text field.
+        Spinner<Double> unitQuantitySpinner = new Spinner<>(0.0, 100000.0, 0.0, 1.0);
+        unitQuantitySpinner.setEditable(true);
+
+        ComboBox<String> unitTypeBox = new ComboBox<>();
+        unitTypeBox.setEditable(true);
+        unitTypeBox.getItems().addAll(UNIT_TYPES);
+        unitTypeBox.setPromptText("Select or type a unit");
 
         Button addButton = new Button("Add Product");
         addButton.getStyleClass().add("button-primary");
         Label statusLabel = newHiddenStatusLabel();
 
         VBox inputs = new VBox(10, sectionTitle,
-                labeled("Name", nameBox), labeled("Category", categoryBox), labeled("Unit of measure", unitBox),
+                labeled("Name", nameBox), labeled("Category", categoryBox),
+                labeled("Unit size", unitQuantitySpinner), labeled("Unit type", unitTypeBox),
                 addButton, statusLabel);
         inputs.getStyleClass().add("card");
 
@@ -78,27 +86,34 @@ public class InventoryView {
         preview.getChildren().addAll(
                 FormLayout.previewRow("Name", nameValue),
                 FormLayout.previewRow("Category", categoryValue),
-                FormLayout.previewRow("Unit", unitValue)
+                FormLayout.previewRow("Unit of measure", unitValue)
         );
         bindPreview(nameBox, nameValue);
         bindPreview(categoryBox, categoryValue);
-        bindPreview(unitBox, unitValue);
+        Runnable updateUnitPreview = () -> {
+            String type = textOf(unitTypeBox);
+            unitValue.setText(type.isBlank() ? "—" : unitQuantitySpinner.getValue() + " " + type);
+        };
+        unitQuantitySpinner.valueProperty().addListener((obs, o, n) -> updateUnitPreview.run());
+        unitTypeBox.getEditor().textProperty().addListener((obs, o, n) -> updateUnitPreview.run());
 
         addButton.setOnAction(e -> {
-            String name = textOf(nameBox), category = textOf(categoryBox), unit = textOf(unitBox);
-            if (name.isBlank() || category.isBlank() || unit.isBlank()) {
+            String name = textOf(nameBox), category = textOf(categoryBox), unitType = textOf(unitTypeBox);
+            if (name.isBlank() || category.isBlank() || unitType.isBlank()) {
                 showError(statusLabel, "Fill in the name, category, and unit of measure.");
                 return;
             }
+            String unitOfMeasure = unitQuantitySpinner.getValue() + " " + unitType.trim();
             try {
                 JSONObject body = new JSONObject();
                 body.put("name", name.trim());
                 body.put("category", category.trim());
-                body.put("unitOfMeasure", unit.trim());
+                body.put("unitOfMeasure", unitOfMeasure);
                 JSONObject response = ApiClient.post("/api/inventory/finished-product", body);
                 showSuccess(statusLabel, "Product added — ID " + response.getInt("productId") + ".");
-                nameBox.getEditor().clear(); categoryBox.getEditor().clear(); unitBox.getEditor().clear();
-                nameBox.setValue(null); categoryBox.setValue(null); unitBox.setValue(null);
+                nameBox.getEditor().clear(); categoryBox.getEditor().clear(); unitTypeBox.getEditor().clear();
+                nameBox.setValue(null); categoryBox.setValue(null); unitTypeBox.setValue(null);
+                unitQuantitySpinner.getValueFactory().setValue(0.0);
             } catch (ApiClient.ApiException ex) {
                 showError(statusLabel, ex.getMessage());
             }
