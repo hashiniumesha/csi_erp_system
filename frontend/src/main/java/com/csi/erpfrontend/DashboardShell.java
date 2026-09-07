@@ -48,6 +48,7 @@ public class DashboardShell {
 
         if (admin || "QC Officer".equals(role)) {
             modules.put("Production / QC", QCView::build);
+            modules.put("Damaged Products", DamagedProductsView::build);
         }
                 if (admin || "Inventory Manager".equals(role)) {
             modules.put("Inventory", InventoryView::build);

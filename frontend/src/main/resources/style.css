@@ -154,8 +154,8 @@
     -fx-border-radius: 6;
     -fx-background-radius: 6;
     -fx-padding: 4 8 4 8;
-    -fx-pref-width: 260;
-    -fx-max-width: 260;
+    -fx-pref-width: 340;
+    -fx-max-width: 340;
     -fx-font-size: 12px;
 }
 
@@ -227,6 +227,23 @@
     -fx-background-color: -csi-page-bg;
 }
 
+/* For a destructive action (e.g. "Request Delete") that needs to read as
+   clearly different in purpose from the primary action next to it,
+   rather than both buttons using the same neutral secondary style. */
+.button-danger {
+    -fx-background-color: transparent;
+    -fx-text-fill: -csi-danger;
+    -fx-border-color: -csi-danger;
+    -fx-border-radius: 6;
+    -fx-background-radius: 6;
+    -fx-padding: 9 18 9 18;
+    -fx-cursor: hand;
+}
+
+.button-danger:hover {
+    -fx-background-color: -csi-danger-bg;
+}
+
 /* ---------- dashboard home (stat cards + charts) ---------- */
 .dashboard-welcome {
     -fx-font-size: 22px;
@@ -265,6 +282,28 @@
 .stat-card-label {
     -fx-font-size: 12px;
     -fx-text-fill: -csi-text-muted;
+}
+
+/* ---------- notification cards (Messages screen) ---------- */
+/* Each request/message is its own bordered card, colour-coded by status,
+   rather than one plain list - same left-border-accent idea as stat cards. */
+.notification-card {
+    -fx-background-color: -csi-card-bg;
+    -fx-background-radius: 10;
+    -fx-border-radius: 10;
+    -fx-border-color: -csi-border;
+    -fx-border-width: 1 1 1 4;
+    -fx-padding: 14 18 14 18;
+}
+
+.notification-card-pending  { -fx-border-color: -csi-border -csi-border -csi-border -csi-cream; }
+.notification-card-approved { -fx-border-color: -csi-border -csi-border -csi-border -csi-success; }
+.notification-card-rejected { -fx-border-color: -csi-border -csi-border -csi-border -csi-danger; }
+
+.notification-title {
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -csi-text-dark;
 }
 
 .chart-card {

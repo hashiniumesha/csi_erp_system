@@ -128,7 +128,7 @@ public class RawMaterialView {
         Button requestChangeButton = new Button("Request Changes");
         requestChangeButton.getStyleClass().add("button-primary");
         Button requestDeleteButton = new Button("Request Delete");
-        requestDeleteButton.getStyleClass().add("button-secondary");
+        requestDeleteButton.getStyleClass().add("button-danger");
 
         VBox inputs = new VBox(10, sectionTitle,
                 labeled("Raw material", materialBox), currentStockLabel,
@@ -187,7 +187,7 @@ public class RawMaterialView {
         Label sectionTitle = new Label("My Requests");
         sectionTitle.getStyleClass().add("section-title");
 
-        VBox list = new VBox(8);
+        VBox list = new VBox(12);
         try {
             JSONArray mine = ApiClient.getArray("/api/approval-requests/mine?userId=" + Session.getUserId());
             if (mine.isEmpty()) {
@@ -196,7 +196,7 @@ public class RawMaterialView {
                 list.getChildren().add(empty);
             }
             for (int i = 0; i < mine.length(); i++) {
-                list.getChildren().add(buildRequestRow(mine.getJSONObject(i)));
+                list.getChildren().add(NotificationCard.build(mine.getJSONObject(i)));
             }
         } catch (ApiClient.ApiException e) {
             Label error = new Label("Couldn't load your requests: " + e.getMessage());
@@ -207,37 +207,6 @@ public class RawMaterialView {
         VBox card = new VBox(10, sectionTitle, list);
         card.getStyleClass().add("card");
         return card;
-    }
-
-    private static HBox buildRequestRow(JSONObject r) {
-        String type = r.optString("requestType", "?");
-        JSONObject payload = new JSONObject(r.optString("payloadJson", "{}"));
-        String description = switch (type) {
-            case "CREATE" -> "Add raw material: " + payload.optString("name", "?");
-            case "UPDATE" -> "Update raw material #" + r.optInt("entityId") + " → " + payload.optString("name", "?");
-            case "DELETE" -> "Delete raw material #" + r.optInt("entityId");
-            default -> type;
-        };
-
-        Label descLabel = new Label(description);
-        descLabel.setStyle("-fx-min-width: 320;");
-
-        String status = r.optString("status", "Pending");
-        Label statusPill = new Label(status);
-        statusPill.getStyleClass().add(switch (status) {
-            case "Approved" -> "status-success";
-            case "Rejected" -> "status-error";
-            default -> "status-pending";
-        });
-
-        HBox row = new HBox(16, descLabel, statusPill);
-        String note = r.optString("adminNote", "");
-        if (!note.isBlank()) {
-            Label noteLabel = new Label("(" + note + ")");
-            noteLabel.getStyleClass().add("muted-label");
-            row.getChildren().add(noteLabel);
-        }
-        return row;
     }
 
     private static void submitRequest(String requestType, Integer entityId, JSONObject payload) {

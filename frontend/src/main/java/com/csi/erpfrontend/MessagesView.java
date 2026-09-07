@@ -96,7 +96,7 @@ public class MessagesView {
         Button approveButton = new Button("Approve");
         approveButton.getStyleClass().add("button-primary");
         Button rejectButton = new Button("Reject");
-        rejectButton.getStyleClass().add("button-secondary");
+        rejectButton.getStyleClass().add("button-danger");
 
         approveButton.setOnAction(e -> {
             try {
@@ -130,7 +130,7 @@ public class MessagesView {
         HBox buttonRow = new HBox(10, approveButton, rejectButton);
 
         VBox row = new VBox(6, descLabel, byLabel, noteField, buttonRow, statusLabel);
-        row.getStyleClass().add("card");
+        row.getStyleClass().addAll("notification-card", "notification-card-pending");
         return row;
     }
 
@@ -138,7 +138,7 @@ public class MessagesView {
         Label sectionTitle = new Label("My Requests");
         sectionTitle.getStyleClass().add("section-title");
 
-        VBox list = new VBox(8);
+        VBox list = new VBox(12);
         try {
             JSONArray mine = ApiClient.getArray("/api/approval-requests/mine?userId=" + Session.getUserId());
             if (mine.isEmpty()) {
@@ -147,7 +147,7 @@ public class MessagesView {
                 list.getChildren().add(empty);
             }
             for (int i = 0; i < mine.length(); i++) {
-                list.getChildren().add(buildMyRequestRow(mine.getJSONObject(i)));
+                list.getChildren().add(NotificationCard.build(mine.getJSONObject(i)));
             }
         } catch (ApiClient.ApiException e) {
             Label error = new Label("Couldn't load your requests: " + e.getMessage());
@@ -160,34 +160,4 @@ public class MessagesView {
         return card;
     }
 
-    private static HBox buildMyRequestRow(JSONObject r) {
-        String type = r.optString("requestType", "?");
-        JSONObject payload = new JSONObject(r.optString("payloadJson", "{}"));
-        String description = switch (type) {
-            case "CREATE" -> "Add raw material: " + payload.optString("name", "?");
-            case "UPDATE" -> "Update raw material #" + r.optInt("entityId") + " → " + payload.optString("name", "?");
-            case "DELETE" -> "Delete raw material #" + r.optInt("entityId");
-            default -> type;
-        };
-
-        Label descLabel = new Label(description);
-        descLabel.setStyle("-fx-min-width: 320;");
-
-        String status = r.optString("status", "Pending");
-        Label statusPill = new Label(status);
-        statusPill.getStyleClass().add(switch (status) {
-            case "Approved" -> "status-success";
-            case "Rejected" -> "status-error";
-            default -> "status-pending";
-        });
-
-        HBox row = new HBox(16, descLabel, statusPill);
-        String note = r.optString("adminNote", "");
-        if (!note.isBlank()) {
-            Label noteLabel = new Label("(" + note + ")");
-            noteLabel.getStyleClass().add("muted-label");
-            row.getChildren().add(noteLabel);
-        }
-        return row;
-    }
 }

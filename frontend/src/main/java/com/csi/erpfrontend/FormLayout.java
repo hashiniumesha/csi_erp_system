@@ -15,10 +15,14 @@ import javafx.scene.layout.VBox;
 public class FormLayout {
 
     public static HBox twoColumn(VBox inputColumn, VBox previewCard) {
-        inputColumn.setMinWidth(300);
-        inputColumn.setMaxWidth(300);
-        HBox.setHgrow(previewCard, Priority.ALWAYS);
-        HBox row = new HBox(24, inputColumn, previewCard);
+        inputColumn.setMinWidth(400);
+        inputColumn.setMaxWidth(400);
+        // Deliberately fixed, not grown to fill remaining space - a wide,
+        // mostly-empty preview card read as unbalanced. Compact and to the
+        // right of the (now wider) inputs instead.
+        previewCard.setMinWidth(300);
+        previewCard.setMaxWidth(320);
+        HBox row = new HBox(20, inputColumn, previewCard);
         return row;
     }
 

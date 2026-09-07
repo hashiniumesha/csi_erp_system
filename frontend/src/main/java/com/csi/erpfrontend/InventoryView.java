@@ -3,8 +3,13 @@ package com.csi.erpfrontend;
 import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.control.*;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import org.json.JSONArray;
 import org.json.JSONObject;
+
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 /**
  * Inventory module.
@@ -30,7 +35,7 @@ public class InventoryView {
         Label title = new Label("Inventory");
         title.getStyleClass().add("page-title");
 
-        VBox layout = new VBox(20, title, buildProductCard(), buildMovementCard(), buildDamagedCard());
+        VBox layout = new VBox(20, title, buildProductCard(), buildMovementCard(), buildDamagedCard(), buildProductListCard());
         layout.setPadding(new Insets(28));
 
         ScrollPane scrollPane = new ScrollPane(layout);
@@ -271,6 +276,73 @@ public class InventoryView {
         });
 
         return FormLayout.twoColumn(inputs, preview);
+    }
+
+    // Full-width, not the two-column input/preview shape - this card is a
+    // browsable list, not a form.
+    private static VBox buildProductListCard() {
+        Label sectionTitle = new Label("Already Added Products");
+        sectionTitle.getStyleClass().add("section-title");
+
+        ComboBox<String> categoryFilter = new ComboBox<>();
+        categoryFilter.setMaxWidth(Double.MAX_VALUE);
+        VBox resultsList = new VBox(8);
+
+        JSONArray allProducts;
+        try {
+            allProducts = ApiClient.getArray("/api/inventory/finished-products");
+        } catch (ApiClient.ApiException e) {
+            allProducts = new JSONArray();
+            Label error = new Label("Couldn't load products: " + e.getMessage());
+            error.getStyleClass().add("status-error");
+            resultsList.getChildren().add(error);
+        }
+        final JSONArray products = allProducts;
+
+        Set<String> categories = new LinkedHashSet<>();
+        categories.add("All");
+        for (int i = 0; i < products.length(); i++) {
+            categories.add(products.getJSONObject(i).optString("category", "Uncategorized"));
+        }
+        categoryFilter.getItems().addAll(categories);
+        categoryFilter.setValue("All");
+
+        Runnable refresh = () -> {
+            resultsList.getChildren().clear();
+            String selected = categoryFilter.getValue();
+            boolean any = false;
+            for (int i = 0; i < products.length(); i++) {
+                JSONObject p = products.getJSONObject(i);
+                String category = p.optString("category", "Uncategorized");
+                if (!"All".equals(selected) && !category.equals(selected)) continue;
+                any = true;
+                resultsList.getChildren().add(buildProductRow(p));
+            }
+            if (!any) {
+                Label empty = new Label("No products in this category.");
+                empty.getStyleClass().add("muted-label");
+                resultsList.getChildren().add(empty);
+            }
+        };
+        categoryFilter.valueProperty().addListener((obs, o, n) -> refresh.run());
+        refresh.run();
+
+        VBox card = new VBox(10, sectionTitle, labeled("Filter by category", categoryFilter), resultsList);
+        card.getStyleClass().add("card");
+        return card;
+    }
+
+    private static HBox buildProductRow(JSONObject p) {
+        Label name = new Label(p.optString("name", "?"));
+        name.setStyle("-fx-font-weight: bold; -fx-min-width: 220;");
+        Label category = new Label(p.optString("category", "?"));
+        category.getStyleClass().add("muted-label");
+        category.setStyle("-fx-min-width: 140;");
+        Label unit = new Label(p.optString("unitOfMeasure", "?"));
+        unit.getStyleClass().add("muted-label");
+        unit.setStyle("-fx-min-width: 100;");
+        Label stock = new Label("Stock: " + p.optDouble("currentStock", 0));
+        return new HBox(16, name, category, unit, stock);
     }
 
     // ComboBox.valueProperty() only fires when a list item is picked, not

@@ -7,8 +7,11 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
+import javafx.scene.control.Tooltip;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
@@ -35,8 +38,37 @@ public class LoginView {
 
         Label passwordLabel = new Label("Password");
         passwordLabel.getStyleClass().add("field-label");
+
         PasswordField passwordField = new PasswordField();
         passwordField.setPromptText("Enter your password");
+
+        // A PasswordField can't reveal its own text - overlaying a plain
+        // TextField (bound to the same text) and toggling which one is
+        // visible/managed is the standard JavaFX way to do a show/hide
+        // password button.
+        TextField passwordVisibleField = new TextField();
+        passwordVisibleField.setPromptText("Enter your password");
+        passwordVisibleField.textProperty().bindBidirectional(passwordField.textProperty());
+        passwordVisibleField.setVisible(false);
+        passwordVisibleField.setManaged(false);
+
+        StackPane passwordStack = new StackPane(passwordField, passwordVisibleField);
+        HBox.setHgrow(passwordStack, Priority.ALWAYS);
+
+        Button toggleVisibilityButton = new Button("Show");
+        toggleVisibilityButton.getStyleClass().add("button-secondary");
+        toggleVisibilityButton.setTooltip(new Tooltip("Show password"));
+        toggleVisibilityButton.setOnAction(e -> {
+            boolean nowVisible = !passwordVisibleField.isVisible();
+            passwordVisibleField.setVisible(nowVisible);
+            passwordVisibleField.setManaged(nowVisible);
+            passwordField.setVisible(!nowVisible);
+            passwordField.setManaged(!nowVisible);
+            toggleVisibilityButton.setText(nowVisible ? "Hide" : "Show");
+            toggleVisibilityButton.getTooltip().setText(nowVisible ? "Hide password" : "Show password");
+        });
+
+        HBox passwordRow = new HBox(6, passwordStack, toggleVisibilityButton);
 
         Label statusLabel = new Label();
         statusLabel.setWrapText(true);
@@ -84,12 +116,12 @@ public class LoginView {
                 logo, brand, subtitle,
                 spacer(10),
                 usernameLabel, usernameField,
-                passwordLabel, passwordField,
+                passwordLabel, passwordRow,
                 loginButton,
                 statusLabel
         );
         card.getStyleClass().add("card");
-        card.setMaxWidth(340);
+        card.setMaxWidth(380);
         card.setAlignment(Pos.TOP_LEFT);
         card.setPadding(new Insets(28));
 
@@ -97,7 +129,7 @@ public class LoginView {
         root.getStyleClass().add("page-bg");
         root.setPadding(new Insets(40));
 
-        Scene scene = new Scene(root, 480, 460);
+        Scene scene = new Scene(root, 520, 480);
         scene.getStylesheets().add(LoginView.class.getResource("/style.css").toExternalForm());
         return scene;
     }
