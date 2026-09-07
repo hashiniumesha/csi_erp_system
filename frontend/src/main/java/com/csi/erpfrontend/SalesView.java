@@ -166,9 +166,12 @@ public class SalesView {
                 body.put("items", new JSONArray().put(item));
 
                 JSONObject response = ApiClient.post("/api/sales/invoice", body);
-                showSuccess(statusLabel, "Invoice created — ID " + response.getInt("invoiceId") +
-                        ", total " + response.getDouble("totalAmount") + ".");
+                int newInvoiceId = response.getInt("invoiceId");
+                showSuccess(statusLabel, "Invoice #" + newInvoiceId + " created — opening preview…");
                 refreshInvoiceList(invoiceList);
+                // A message alone doesn't show what was actually billed -
+                // open the real invoice document straight away.
+                InvoicePreviewView.show(newInvoiceId);
             } catch (ApiClient.ApiException ex) {
                 showError(statusLabel, ex.getMessage());
             }
@@ -256,7 +259,8 @@ public class SalesView {
     }
 
     private static HBox buildInvoiceRow(JSONObject inv) {
-        Label id = new Label("Invoice #" + inv.optInt("invoiceId"));
+        int invoiceId = inv.optInt("invoiceId");
+        Label id = new Label("Invoice #" + invoiceId);
         id.setStyle("-fx-font-weight: bold; -fx-min-width: 100;");
         Label customer = new Label(inv.optString("customerName", "?"));
         customer.setStyle("-fx-min-width: 220;");
@@ -270,7 +274,16 @@ public class SalesView {
         total.setStyle("-fx-min-width: 120;");
         Label date = new Label(inv.optString("invoiceDate", "?"));
         date.getStyleClass().add("muted-label");
-        return new HBox(16, id, customer, officer, type, total, date);
+        date.setStyle("-fx-min-width: 90;");
+
+        // Opens the actual invoice document (logo, itemized products,
+        // totals, Print button) instead of leaving "created successfully"
+        // as the only trace an invoice ever existed.
+        Button view = new Button("View");
+        view.getStyleClass().add("button-secondary");
+        view.setOnAction(e -> InvoicePreviewView.show(invoiceId));
+
+        return new HBox(16, id, customer, officer, type, total, date, view);
     }
 
     private static VBox labeled(String labelText, Control control) {

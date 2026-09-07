@@ -35,8 +35,9 @@ public class QCView {
 
         VBox grnCard = buildGrnCard();
         VBox decisionCard = buildDecisionCard();
+        VBox expiryCard = buildExpiryCard();
 
-        VBox layout = new VBox(20, title, grnCard, decisionCard);
+        VBox layout = new VBox(20, title, grnCard, decisionCard, expiryCard);
         layout.setPadding(new Insets(28));
 
         ScrollPane scrollPane = new ScrollPane(layout);
@@ -153,8 +154,11 @@ public class QCView {
                 if (!"Pending".equals(g.optString("status"))) continue;
                 String supplierName = g.optJSONObject("supplier") != null ? g.getJSONObject("supplier").optString("name", "?") : "?";
                 String materialName = g.optJSONObject("rawMaterial") != null ? g.getJSONObject("rawMaterial").optString("name", "?") : "?";
+                String expiryNote = g.optString("expiryDate", null) != null
+                        ? " — expires " + g.optString("expiryDate") + " (" + friendlyExpiryStatus(g.optString("expiryStatus", "OK")) + ")"
+                        : "";
                 String label = "GRN #" + g.getInt("grnId") + " — " + materialName + " (" + g.optDouble("quantityReceived") +
-                        ") from " + supplierName + " — " + g.optString("dateReceived");
+                        ") from " + supplierName + " — " + g.optString("dateReceived") + expiryNote;
                 grnBox.getItems().add(new Option(g.getInt("grnId"), label));
             }
             for (Object o : ApiClient.getArray("/api/users")) {
@@ -218,6 +222,73 @@ public class QCView {
         } catch (ApiClient.ApiException ex) {
             showError(statusLabel, ex.getMessage());
         }
+    }
+
+    // Every raw-material delivery (GRN) doubles as a batch record, and each
+    // one gets a computed expiry status here — the client-specified rule
+    // (Milk -> 2 months, Yogurt -> 3 months, else 1 year), applied to
+    // whichever raw material this batch is, from its DateReceived. Lets QC
+    // check expiry alongside quality when deciding a batch.
+    private static VBox buildExpiryCard() {
+        Label sectionTitle = new Label("Raw Material Batch Expiry");
+        sectionTitle.getStyleClass().add("section-title");
+        Label subtitle = new Label("Every delivery, with an automatically calculated expiry date.");
+        subtitle.getStyleClass().add("muted-label");
+
+        VBox list = new VBox(8);
+        try {
+            JSONArray grns = ApiClient.getArray("/api/qc/grns");
+            if (grns.isEmpty()) {
+                Label empty = new Label("No batches recorded yet.");
+                empty.getStyleClass().add("muted-label");
+                list.getChildren().add(empty);
+            }
+            for (int i = 0; i < grns.length(); i++) {
+                list.getChildren().add(buildExpiryRow(grns.getJSONObject(i)));
+            }
+        } catch (ApiClient.ApiException e) {
+            Label error = new Label("Couldn't load batches: " + e.getMessage());
+            error.getStyleClass().add("status-error");
+            list.getChildren().add(error);
+        }
+
+        VBox card = new VBox(10, sectionTitle, subtitle, list);
+        card.getStyleClass().add("card");
+        return card;
+    }
+
+    private static HBox buildExpiryRow(JSONObject g) {
+        String materialName = g.optJSONObject("rawMaterial") != null ? g.getJSONObject("rawMaterial").optString("name", "?") : "?";
+        Label name = new Label(materialName);
+        name.setStyle("-fx-font-weight: bold; -fx-min-width: 180;");
+        Label grnId = new Label("GRN #" + g.optInt("grnId"));
+        grnId.getStyleClass().add("muted-label");
+        grnId.setStyle("-fx-min-width: 80;");
+        Label received = new Label("Received: " + g.optString("dateReceived", "?"));
+        received.getStyleClass().add("muted-label");
+        received.setStyle("-fx-min-width: 140;");
+        Label expiry = new Label("Expires: " + g.optString("expiryDate", "?"));
+        expiry.setStyle("-fx-min-width: 140;");
+        Label qty = new Label("Qty: " + String.format("%,.2f", g.optDouble("quantityReceived", 0)));
+        qty.setStyle("-fx-min-width: 100;");
+
+        String status = g.optString("expiryStatus", "OK");
+        Label statusLabel = new Label(friendlyExpiryStatus(status) + " (" + g.optLong("daysRemaining", 0) + "d)");
+        statusLabel.getStyleClass().add(switch (status) {
+            case "EXPIRED" -> "status-error";
+            case "EXPIRING_SOON" -> "status-pending";
+            default -> "status-success";
+        });
+
+        return new HBox(14, name, grnId, received, expiry, qty, statusLabel);
+    }
+
+    private static String friendlyExpiryStatus(String status) {
+        return switch (status) {
+            case "EXPIRED" -> "Expired";
+            case "EXPIRING_SOON" -> "Expiring soon";
+            default -> "OK";
+        };
     }
 
     // ---------- small shared helpers ----------

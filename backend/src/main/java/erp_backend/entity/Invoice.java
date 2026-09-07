@@ -1,5 +1,6 @@
 package erp_backend.entity;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 import jakarta.persistence.Column;
@@ -36,8 +37,13 @@ public class Invoice {
     @Column(name = "PaymentType", nullable = false)
     private PaymentType paymentType;
 
+    // BigDecimal, not Double - this column is DECIMAL(10,2) in MySQL, and
+    // reading/writing it through a Double introduces binary floating-point
+    // drift (e.g. 19.99 isn't exactly representable in binary) that showed
+    // up as invoice totals landing a cent off from what was actually
+    // entered. BigDecimal round-trips exact decimal values.
     @Column(name = "TotalAmount")
-    private Double totalAmount = 0.0;
+    private BigDecimal totalAmount = BigDecimal.ZERO;
 
     public enum PaymentType { Cash, Credit }
 
@@ -51,6 +57,6 @@ public class Invoice {
     public void setInvoiceDate(LocalDate invoiceDate) { this.invoiceDate = invoiceDate; }
     public PaymentType getPaymentType() { return paymentType; }
     public void setPaymentType(PaymentType paymentType) { this.paymentType = paymentType; }
-    public Double getTotalAmount() { return totalAmount; }
-    public void setTotalAmount(Double totalAmount) { this.totalAmount = totalAmount; }
+    public BigDecimal getTotalAmount() { return totalAmount; }
+    public void setTotalAmount(BigDecimal totalAmount) { this.totalAmount = totalAmount; }
 }

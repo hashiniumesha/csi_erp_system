@@ -1,5 +1,7 @@
 package erp_backend.entity;
 
+import java.math.BigDecimal;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -25,14 +27,20 @@ public class InvoiceItem {
     @JoinColumn(name = "ProductID", nullable = false)
     private FinishedProduct product;
 
+    // Quantity, UnitPrice and Subtotal are all DECIMAL(10,2) columns in
+    // MySQL. Mapping them through Java's Double (as this used to) reads and
+    // writes them via binary floating-point, which can't represent most
+    // 2-decimal-place values exactly (e.g. 19.99) - that drift is what was
+    // showing up as invoice amounts a cent higher than what was entered.
+    // BigDecimal carries the exact decimal value end-to-end instead.
     @Column(name = "Quantity", nullable = false)
-    private Double quantity;
+    private BigDecimal quantity;
 
     @Column(name = "UnitPrice", nullable = false)
-    private Double unitPrice;
+    private BigDecimal unitPrice;
 
     @Column(name = "Subtotal")
-    private Double subtotal;
+    private BigDecimal subtotal;
 
     public Integer getInvoiceItemId() { return invoiceItemId; }
     public void setInvoiceItemId(Integer invoiceItemId) { this.invoiceItemId = invoiceItemId; }
@@ -40,10 +48,10 @@ public class InvoiceItem {
     public void setInvoice(Invoice invoice) { this.invoice = invoice; }
     public FinishedProduct getProduct() { return product; }
     public void setProduct(FinishedProduct product) { this.product = product; }
-    public Double getQuantity() { return quantity; }
-    public void setQuantity(Double quantity) { this.quantity = quantity; }
-    public Double getUnitPrice() { return unitPrice; }
-    public void setUnitPrice(Double unitPrice) { this.unitPrice = unitPrice; }
-    public Double getSubtotal() { return subtotal; }
-    public void setSubtotal(Double subtotal) { this.subtotal = subtotal; }
+    public BigDecimal getQuantity() { return quantity; }
+    public void setQuantity(BigDecimal quantity) { this.quantity = quantity; }
+    public BigDecimal getUnitPrice() { return unitPrice; }
+    public void setUnitPrice(BigDecimal unitPrice) { this.unitPrice = unitPrice; }
+    public BigDecimal getSubtotal() { return subtotal; }
+    public void setSubtotal(BigDecimal subtotal) { this.subtotal = subtotal; }
 }

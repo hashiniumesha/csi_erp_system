@@ -68,17 +68,17 @@ public class DashboardController {
         s.invoicesToday = invoices.stream().filter(i -> today.equals(i.getInvoiceDate())).count();
         s.salesTotalToday = invoices.stream()
                 .filter(i -> today.equals(i.getInvoiceDate()))
-                .mapToDouble(i -> i.getTotalAmount() != null ? i.getTotalAmount() : 0.0)
+                .mapToDouble(i -> i.getTotalAmount() != null ? i.getTotalAmount().doubleValue() : 0.0)
                 .sum();
         s.salesTotalThisMonth = invoices.stream()
                 .filter(i -> i.getInvoiceDate() != null
                         && i.getInvoiceDate().getMonthValue() == today.getMonthValue()
                         && i.getInvoiceDate().getYear() == today.getYear())
-                .mapToDouble(i -> i.getTotalAmount() != null ? i.getTotalAmount() : 0.0)
+                .mapToDouble(i -> i.getTotalAmount() != null ? i.getTotalAmount().doubleValue() : 0.0)
                 .sum();
 
         s.totalOutstandingBalance = customerRepository.findAll().stream()
-                .mapToDouble(c -> c.getOutstandingBalance() != null ? c.getOutstandingBalance() : 0.0)
+                .mapToDouble(c -> c.getOutstandingBalance() != null ? c.getOutstandingBalance().doubleValue() : 0.0)
                 .sum();
 
         List<FinishedProductStockMovement> movements = finishedProductStockMovementRepository.findAll();

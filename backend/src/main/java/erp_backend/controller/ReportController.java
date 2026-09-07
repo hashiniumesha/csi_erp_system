@@ -122,7 +122,7 @@ public class ReportController {
 
         Map<LocalDate, Double> revenueByDay = new TreeMap<>();
         for (Invoice i : invoices) {
-            revenueByDay.merge(i.getInvoiceDate(), i.getTotalAmount() != null ? i.getTotalAmount() : 0.0, Double::sum);
+            revenueByDay.merge(i.getInvoiceDate(), i.getTotalAmount() != null ? i.getTotalAmount().doubleValue() : 0.0, Double::sum);
         }
 
         Map<LocalDate, Double> expenditureByDay = new TreeMap<>();

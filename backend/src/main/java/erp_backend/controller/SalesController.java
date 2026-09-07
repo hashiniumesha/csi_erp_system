@@ -6,6 +6,7 @@ import erp_backend.service.SalesService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -23,13 +24,13 @@ public class SalesController {
     public static class CustomerRequest {
         public String name;
         public String contactNo;
-        public Double creditLimit;
+        public BigDecimal creditLimit;
     }
 
     public static class InvoiceItemRequest {
         public Integer productId;
-        public Double quantity;
-        public Double unitPrice;
+        public BigDecimal quantity;
+        public BigDecimal unitPrice;
     }
 
     public static class InvoiceRequest {
@@ -46,7 +47,7 @@ public class SalesController {
 
     public static class CollectionRequest {
         public Integer invoiceId;
-        public Double amount;
+        public BigDecimal amount;
     }
 
     @PostMapping("/customer")
@@ -60,7 +61,7 @@ public class SalesController {
     }
 
     @PostMapping("/invoice")
-    public Invoice createInvoice(@RequestBody InvoiceRequest request) {
+    public InvoiceDetail createInvoice(@RequestBody InvoiceRequest request) {
         Customer customer = customerRepository.findById(request.customerId)
                 .orElseThrow(() -> new RuntimeException("Customer not found"));
 
@@ -68,8 +69,8 @@ public class SalesController {
                 .orElseThrow(() -> new RuntimeException("Sales officer not found"));
 
         List<FinishedProduct> products = new ArrayList<>();
-        List<Double> quantities = new ArrayList<>();
-        List<Double> unitPrices = new ArrayList<>();
+        List<BigDecimal> quantities = new ArrayList<>();
+        List<BigDecimal> unitPrices = new ArrayList<>();
 
         for (InvoiceItemRequest itemReq : request.items) {
             FinishedProduct product = finishedProductRepository.findById(itemReq.productId)
@@ -79,7 +80,7 @@ public class SalesController {
             unitPrices.add(itemReq.unitPrice);
         }
 
-        return salesService.createInvoiceWithItems(
+        Invoice invoice = salesService.createInvoiceWithItems(
                 customer,
                 salesOfficer,
                 Invoice.PaymentType.valueOf(request.paymentType),
@@ -87,6 +88,13 @@ public class SalesController {
                 quantities,
                 unitPrices
         );
+        // Returning the raw Invoice entity here used to serialize its
+        // nested salesOfficer (AppUser) straight into the response,
+        // passwordHash included — same leak the /invoices list endpoint
+        // was already fixed for. Build the same safe detail DTO the
+        // Invoice Preview screen uses instead, so this response can go
+        // straight into that preview.
+        return getInvoiceDetail(invoice.getInvoiceId());
     }
 
     // Safe projection — the raw Invoice entity nests the full AppUser as
@@ -99,7 +107,7 @@ public class SalesController {
         public String salesOfficerName;
         public String invoiceDate;
         public String paymentType;
-        public Double totalAmount;
+        public BigDecimal totalAmount;
     }
 
     @GetMapping("/invoices")
@@ -114,6 +122,52 @@ public class SalesController {
             s.totalAmount = i.getTotalAmount();
             return s;
         }).toList();
+    }
+
+    // Full invoice document - customer, officer, and every line item - for
+    // the Invoice Preview screen. Kept as a safe projection for the same
+    // reason InvoiceSummary is: the raw entity nests a full AppUser
+    // (salesOfficer) whose JSON serialization leaks passwordHash.
+    public static class InvoiceItemView {
+        public String productName;
+        public String unitOfMeasure;
+        public BigDecimal quantity;
+        public BigDecimal unitPrice;
+        public BigDecimal subtotal;
+    }
+
+    public static class InvoiceDetail {
+        public Integer invoiceId;
+        public String invoiceDate;
+        public String paymentType;
+        public String customerName;
+        public String customerContact;
+        public String salesOfficerName;
+        public List<InvoiceItemView> items;
+        public BigDecimal totalAmount;
+    }
+
+    @GetMapping("/invoice/{id}")
+    public InvoiceDetail getInvoiceDetail(@PathVariable Integer id) {
+        Invoice invoice = salesService.getInvoice(id);
+        InvoiceDetail d = new InvoiceDetail();
+        d.invoiceId = invoice.getInvoiceId();
+        d.invoiceDate = invoice.getInvoiceDate() != null ? invoice.getInvoiceDate().toString() : null;
+        d.paymentType = invoice.getPaymentType() != null ? invoice.getPaymentType().name() : null;
+        d.customerName = invoice.getCustomer() != null ? invoice.getCustomer().getName() : "?";
+        d.customerContact = invoice.getCustomer() != null ? invoice.getCustomer().getContactNo() : null;
+        d.salesOfficerName = invoice.getSalesOfficer() != null ? invoice.getSalesOfficer().getFullName() : "?";
+        d.totalAmount = invoice.getTotalAmount();
+        d.items = salesService.getInvoiceItems(id).stream().map(item -> {
+            InvoiceItemView v = new InvoiceItemView();
+            v.productName = item.getProduct() != null ? item.getProduct().getName() : "?";
+            v.unitOfMeasure = item.getProduct() != null ? item.getProduct().getUnitOfMeasure() : null;
+            v.quantity = item.getQuantity();
+            v.unitPrice = item.getUnitPrice();
+            v.subtotal = item.getSubtotal();
+            return v;
+        }).toList();
+        return d;
     }
 
     @PostMapping("/route")

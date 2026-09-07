@@ -1,5 +1,7 @@
 package erp_backend.entity;
 
+import java.math.BigDecimal;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -21,11 +23,13 @@ public class Customer {
     @Column(name = "ContactNo")
     private String contactNo;
 
+    // BigDecimal - see InvoiceItem for why DECIMAL(10,2) money columns are
+    // no longer mapped through Double.
     @Column(name = "CreditLimit")
-    private Double creditLimit = 0.0;
+    private BigDecimal creditLimit = BigDecimal.ZERO;
 
     @Column(name = "OutstandingBalance")
-    private Double outstandingBalance = 0.0;
+    private BigDecimal outstandingBalance = BigDecimal.ZERO;
 
     public Integer getCustomerId() { return customerId; }
     public void setCustomerId(Integer customerId) { this.customerId = customerId; }
@@ -33,8 +37,8 @@ public class Customer {
     public void setName(String name) { this.name = name; }
     public String getContactNo() { return contactNo; }
     public void setContactNo(String contactNo) { this.contactNo = contactNo; }
-    public Double getCreditLimit() { return creditLimit; }
-    public void setCreditLimit(Double creditLimit) { this.creditLimit = creditLimit; }
-    public Double getOutstandingBalance() { return outstandingBalance; }
-    public void setOutstandingBalance(Double outstandingBalance) { this.outstandingBalance = outstandingBalance; }
+    public BigDecimal getCreditLimit() { return creditLimit; }
+    public void setCreditLimit(BigDecimal creditLimit) { this.creditLimit = creditLimit; }
+    public BigDecimal getOutstandingBalance() { return outstandingBalance; }
+    public void setOutstandingBalance(BigDecimal outstandingBalance) { this.outstandingBalance = outstandingBalance; }
 }
