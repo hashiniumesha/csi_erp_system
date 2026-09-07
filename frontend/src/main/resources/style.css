@@ -19,7 +19,7 @@
     -csi-accent: #E26D5C;
     -csi-accent-dark: #C15748;
     -csi-page-bg: #FAF7EF;
-    -csi-card-bg: rgba(255, 255, 255, 0.92);
+    -csi-card-bg: rgba(255, 255, 255, 0.85);
     -csi-text-dark: #472D30;
     -csi-text-muted: #8A6B67;
     -csi-text-on-sidebar: #FFE1A8;
@@ -324,10 +324,12 @@
 .chart-legend-item-symbol.default-color0 { -fx-background-color: -csi-accent; }
 .chart-legend-item-symbol.default-color1 { -fx-background-color: -csi-sidebar-bg-active; }
 .chart-legend-item-symbol.default-color2 { -fx-background-color: -csi-sage; }
+.chart-legend-item-symbol.default-color3 { -fx-background-color: -csi-danger; }
 
 .default-color0.chart-pie { -fx-pie-color: -csi-accent; }
 .default-color1.chart-pie { -fx-pie-color: -csi-sidebar-bg-active; }
 .default-color2.chart-pie { -fx-pie-color: -csi-cream; }
+.default-color3.chart-pie { -fx-pie-color: -csi-danger; }
 
 .default-color0.chart-bar { -fx-bar-fill: -csi-accent; }
 .default-color1.chart-bar { -fx-bar-fill: -csi-sage; }

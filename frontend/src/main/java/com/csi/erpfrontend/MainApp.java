@@ -17,6 +17,7 @@ public class MainApp extends Application {
         primaryStage.getIcons().add(new Image(MainApp.class.getResourceAsStream("/csi-logo.png")));
         primaryStage.setTitle("Ceylon Sweets Island ERP - Login");
         primaryStage.setScene(LoginView.build(primaryStage));
+        primaryStage.setMaximized(true);
         primaryStage.show();
     }
 

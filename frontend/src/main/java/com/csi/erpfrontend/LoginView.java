@@ -31,16 +31,22 @@ public class LoginView {
         Label subtitle = new Label("ERP System");
         subtitle.getStyleClass().add("muted-label");
 
+        // Explicit widths here, rather than the shared .text-field default -
+        // this login card is much narrower than the Inventory/Raw Material
+        // forms that width was tuned for, and combined with the eye button
+        // it doesn't fit otherwise.
         Label usernameLabel = new Label("Username");
         usernameLabel.getStyleClass().add("field-label");
         TextField usernameField = new TextField();
         usernameField.setPromptText("e.g. qcofficer");
+        usernameField.setMaxWidth(300);
 
         Label passwordLabel = new Label("Password");
         passwordLabel.getStyleClass().add("field-label");
 
         PasswordField passwordField = new PasswordField();
         passwordField.setPromptText("Enter your password");
+        passwordField.setMaxWidth(Double.MAX_VALUE);
 
         // A PasswordField can't reveal its own text - overlaying a plain
         // TextField (bound to the same text) and toggling which one is
@@ -49,13 +55,15 @@ public class LoginView {
         TextField passwordVisibleField = new TextField();
         passwordVisibleField.setPromptText("Enter your password");
         passwordVisibleField.textProperty().bindBidirectional(passwordField.textProperty());
+        passwordVisibleField.setMaxWidth(Double.MAX_VALUE);
         passwordVisibleField.setVisible(false);
         passwordVisibleField.setManaged(false);
 
         StackPane passwordStack = new StackPane(passwordField, passwordVisibleField);
+        passwordStack.setMaxWidth(240);
         HBox.setHgrow(passwordStack, Priority.ALWAYS);
 
-        Button toggleVisibilityButton = new Button("Show");
+        Button toggleVisibilityButton = new Button("👁");
         toggleVisibilityButton.getStyleClass().add("button-secondary");
         toggleVisibilityButton.setTooltip(new Tooltip("Show password"));
         toggleVisibilityButton.setOnAction(e -> {
@@ -64,7 +72,6 @@ public class LoginView {
             passwordVisibleField.setManaged(nowVisible);
             passwordField.setVisible(!nowVisible);
             passwordField.setManaged(!nowVisible);
-            toggleVisibilityButton.setText(nowVisible ? "Hide" : "Show");
             toggleVisibilityButton.getTooltip().setText(nowVisible ? "Hide password" : "Show password");
         });
 

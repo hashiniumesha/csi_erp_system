@@ -35,13 +35,14 @@ public class DashboardHomeView {
         subtitle.getStyleClass().add("dashboard-subtitle");
 
         FlowPane statGrid = new FlowPane(16, 16);
-        HBox chartRow = new HBox(16);
+        FlowPane chartRow = new FlowPane(20, 20);
         boolean admin = Session.isAdmin();
         String role = Session.getRoleName();
 
+        JSONObject summary = null;
         try {
-            JSONObject s = ApiClient.getObject("/api/dashboard/summary");
-            for (Stat stat : statsForRole(s)) {
+            summary = ApiClient.getObject("/api/dashboard/summary");
+            for (Stat stat : statsForRole(summary)) {
                 statGrid.getChildren().add(buildStatCard(stat));
             }
         } catch (ApiClient.ApiException e) {
@@ -62,6 +63,9 @@ public class DashboardHomeView {
         }
         if (admin || "Inventory Manager".equals(role)) {
             chartRow.getChildren().add(buildStockLevelsChart());
+            if (summary != null) {
+                chartRow.getChildren().add(buildInventoryCompositionChart(summary));
+            }
         }
         if (admin || "Sales Officer".equals(role)) {
             chartRow.getChildren().add(buildPaymentTypeChart());
@@ -124,7 +128,7 @@ public class DashboardHomeView {
         heading.getStyleClass().add("section-title");
         VBox card = new VBox(10, heading, chart);
         card.getStyleClass().add("chart-card");
-        card.setPrefWidth(340);
+        card.setPrefWidth(460);
         return card;
     }
 
@@ -134,6 +138,7 @@ public class DashboardHomeView {
         PieChart chart = new PieChart();
         chart.setLegendVisible(true);
         chart.setLabelsVisible(true);
+        chart.setPrefHeight(360);
         try {
             JSONArray grns = ApiClient.getArray("/api/qc/grns");
             int pending = 0, approved = 0, rejected = 0;
@@ -161,6 +166,7 @@ public class DashboardHomeView {
         BarChart<String, Number> chart = new BarChart<>(xAxis, yAxis);
         chart.setLegendVisible(true);
         chart.setAnimated(false);
+        chart.setPrefHeight(360);
         XYChart.Series<String, Number> stockSeries = new XYChart.Series<>();
         stockSeries.setName("Current stock");
         XYChart.Series<String, Number> reorderSeries = new XYChart.Series<>();
@@ -181,11 +187,36 @@ public class DashboardHomeView {
         return buildChartCard("Raw Material Stock Levels", chart);
     }
 
+    // Inventory: how finished-product activity is distributed - available
+    // stock, stock-in/out movement volume, and damage. "Deleted products"
+    // was asked for too, but there is no delete-product feature anywhere
+    // in this system, so that count doesn't actually exist - shown as real
+    // recorded activity instead of inventing a number for it.
+    private static VBox buildInventoryCompositionChart(JSONObject s) {
+        PieChart chart = new PieChart();
+        chart.setLegendVisible(true);
+        chart.setLabelsVisible(true);
+        chart.setPrefHeight(360);
+
+        long available = s.optLong("totalFinishedProducts", 0);
+        long stockIn = s.optLong("stockInMovementCount", 0);
+        long stockOut = s.optLong("stockOutMovementCount", 0);
+        long damaged = s.optLong("damagedProductRecordCount", 0);
+
+        chart.getData().add(new PieChart.Data("Available Products (" + available + ")", available));
+        chart.getData().add(new PieChart.Data("Stock-In Records (" + stockIn + ")", stockIn));
+        chart.getData().add(new PieChart.Data("Stock-Out Records (" + stockOut + ")", stockOut));
+        chart.getData().add(new PieChart.Data("Damaged Records (" + damaged + ")", damaged));
+
+        return buildChartCard("Inventory Activity Composition", chart);
+    }
+
     // Sales: how this period's invoices split between cash and credit.
     private static VBox buildPaymentTypeChart() {
         PieChart chart = new PieChart();
         chart.setLegendVisible(true);
         chart.setLabelsVisible(true);
+        chart.setPrefHeight(360);
         try {
             JSONArray invoices = ApiClient.getArray("/api/sales/invoices");
             int cash = 0, credit = 0;
