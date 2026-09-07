@@ -26,7 +26,10 @@ public class RawMaterialView {
         Label title = new Label("Raw Materials");
         title.getStyleClass().add("page-title");
 
-        VBox layout = new VBox(20, title, buildAddCard(), buildEditDeleteCard(), buildMyRequestsCard());
+        // The two forms side by side, filling the width, with the request
+        // history as its own full-width row below.
+        Node formGrid = FormLayout.gridOfTwo(buildAddCard(), buildEditDeleteCard());
+        VBox layout = new VBox(20, title, formGrid, buildMyRequestsCard());
         layout.setPadding(new Insets(28));
 
         ScrollPane scrollPane = new ScrollPane(layout);

@@ -10,7 +10,7 @@ import javafx.scene.chart.XYChart;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.FlowPane;
-import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -35,7 +35,7 @@ public class DashboardHomeView {
         subtitle.getStyleClass().add("dashboard-subtitle");
 
         FlowPane statGrid = new FlowPane(16, 16);
-        FlowPane chartRow = new FlowPane(20, 20);
+        List<Node> charts = new ArrayList<>();
         boolean admin = Session.isAdmin();
         String role = Session.getRoleName();
 
@@ -59,23 +59,31 @@ public class DashboardHomeView {
         // client requirement document, section 3.6) is delivered directly
         // here, at the point every role already lands after logging in.
         if (admin || "QC Officer".equals(role)) {
-            chartRow.getChildren().add(buildGrnStatusChart());
+            charts.add(buildGrnStatusChart());
         }
         if (admin || "Inventory Manager".equals(role)) {
-            chartRow.getChildren().add(buildStockLevelsChart());
+            charts.add(buildStockLevelsChart());
             if (summary != null) {
-                chartRow.getChildren().add(buildInventoryCompositionChart(summary));
+                charts.add(buildInventoryCompositionChart(summary));
             }
         }
         if (admin || "Sales Officer".equals(role)) {
-            chartRow.getChildren().add(buildPaymentTypeChart());
+            charts.add(buildPaymentTypeChart());
         }
 
-        VBox layout = new VBox(20, welcome, subtitle, statGrid, chartRow);
+        // Same 2-column, fills-the-space grid as Inventory/Raw Materials,
+        // except rows also grow vertically so the charts reach toward the
+        // bottom of the screen instead of stopping at their own content
+        // height with empty space left below.
+        Node chartGrid = FormLayout.rowFillHeight(charts.toArray(new Node[0]));
+
+        VBox layout = new VBox(20, welcome, subtitle, statGrid, chartGrid);
         layout.setPadding(new Insets(28));
+        VBox.setVgrow(chartGrid, Priority.ALWAYS);
 
         ScrollPane scrollPane = new ScrollPane(layout);
         scrollPane.setFitToWidth(true);
+        scrollPane.setFitToHeight(true);
         scrollPane.getStyleClass().add("page-bg");
         return scrollPane;
     }
@@ -128,7 +136,13 @@ public class DashboardHomeView {
         heading.getStyleClass().add("section-title");
         VBox card = new VBox(10, heading, chart);
         card.getStyleClass().add("chart-card");
-        card.setPrefWidth(460);
+        // Width comes from the grid's percentage columns (FormLayout);
+        // height grows to fill whatever the grid row gives this card,
+        // rather than the chart stopping at a fixed pixel size.
+        card.setMaxWidth(Double.MAX_VALUE);
+        card.setMaxHeight(Double.MAX_VALUE);
+        chart.setStyle("-fx-max-width: infinity; -fx-max-height: infinity;");
+        VBox.setVgrow(chart, Priority.ALWAYS);
         return card;
     }
 

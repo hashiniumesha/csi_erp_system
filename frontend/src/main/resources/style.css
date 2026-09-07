@@ -53,6 +53,17 @@
     -fx-background-repeat: no-repeat;
 }
 
+/* Login screen background - the file just needs to exist at this path for
+   this to take effect; if it's missing, JavaFX quietly falls back to
+   -fx-background-color below instead of erroring. */
+.login-bg {
+    -fx-background-color: -csi-page-bg;
+    -fx-background-image: url("background_login.jpg");
+    -fx-background-size: cover;
+    -fx-background-position: center center;
+    -fx-background-repeat: no-repeat;
+}
+
 /* A ScrollPane paints its own "viewport" region on top of its content -
    by default a near-white fill that was silently covering .inventory-bg's
    image underneath it. This is what let the image show through. Scoped

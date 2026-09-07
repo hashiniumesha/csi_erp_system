@@ -133,7 +133,7 @@ public class LoginView {
         card.setPadding(new Insets(28));
 
         StackPane root = new StackPane(card);
-        root.getStyleClass().add("page-bg");
+        root.getStyleClass().add("login-bg");
         root.setPadding(new Insets(40));
 
         Scene scene = new Scene(root, 520, 480);

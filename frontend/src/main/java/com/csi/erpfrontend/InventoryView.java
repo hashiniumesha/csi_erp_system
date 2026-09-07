@@ -35,7 +35,11 @@ public class InventoryView {
         Label title = new Label("Inventory");
         title.getStyleClass().add("page-title");
 
-        VBox layout = new VBox(20, title, buildProductCard(), buildMovementCard(), buildDamagedCard(), buildProductListCard());
+        // 2x2 grid so the four cards actually fill the screen instead of
+        // stacking in one narrow column with empty space beside each one.
+        Node formGrid = FormLayout.gridOfTwo(
+                buildProductCard(), buildMovementCard(), buildDamagedCard(), buildProductListCard());
+        VBox layout = new VBox(20, title, formGrid);
         layout.setPadding(new Insets(28));
 
         ScrollPane scrollPane = new ScrollPane(layout);
