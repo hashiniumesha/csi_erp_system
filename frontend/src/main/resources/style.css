@@ -41,6 +41,12 @@
     -fx-background-color: -csi-page-bg;
 }
 
+.preview-card {
+    -fx-background-color: -csi-page-bg;
+    -fx-border-color: -csi-cream;
+    -fx-border-width: 2;
+}
+
 .card {
     -fx-background-color: -csi-card-bg;
     -fx-background-radius: 10;
@@ -121,7 +127,7 @@
 }
 
 /* ---------- form controls ---------- */
-.text-field, .combo-box, .date-picker {
+.text-field, .combo-box, .date-picker, .spinner {
     -fx-background-color: white;
     -fx-border-color: -csi-border;
     -fx-border-radius: 6;
@@ -132,8 +138,16 @@
     -fx-font-size: 12px;
 }
 
-.text-field:focused, .combo-box:focused, .date-picker:focused {
+.text-field:focused, .combo-box:focused, .date-picker:focused, .spinner:focused {
     -fx-border-color: -csi-accent;
+}
+
+.spinner .increment-arrow-button, .spinner .decrement-arrow-button {
+    -fx-background-color: -csi-page-bg;
+}
+
+.spinner .increment-arrow, .spinner .decrement-arrow {
+    -fx-background-color: -csi-text-dark;
 }
 
 /* A field container (see DashboardHomeView-style card layouts) that

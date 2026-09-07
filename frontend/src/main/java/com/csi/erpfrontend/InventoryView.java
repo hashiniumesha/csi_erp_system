@@ -18,6 +18,14 @@ public class InventoryView {
         @Override public String toString() { return label; }
     }
 
+    private static final String[] CATEGORIES = {
+            "Ice Bars", "Yogurt", "Soft Drink Cups", "Fruit Nectar", "Milk Packets", "Faluda"
+    };
+    private static final String[] UNITS = { "pcs", "kg", "L", "packets", "bundles" };
+    private static final String[] DAMAGE_CAUSES = {
+            "Pouch leak", "Dropped / mishandled", "Production defect", "Expired", "Transport damage", "Contamination"
+    };
+
     public static Node build() {
         Label title = new Label("Inventory");
         title.getStyleClass().add("page-title");
@@ -31,47 +39,75 @@ public class InventoryView {
         return scrollPane;
     }
 
-    private static VBox buildProductCard() {
+    private static Node buildProductCard() {
         Label sectionTitle = new Label("Add Finished Product");
         sectionTitle.getStyleClass().add("section-title");
 
-        TextField nameField = new TextField();
-        nameField.setPromptText("e.g. Ice Bar - Mixed Fruit");
-        TextField categoryField = new TextField();
-        categoryField.setPromptText("e.g. Ice Bars");
-        TextField unitField = new TextField();
-        unitField.setPromptText("e.g. pcs, kg");
+        ComboBox<String> nameBox = new ComboBox<>();
+        nameBox.setEditable(true);
+        nameBox.setPromptText("Select or type a name");
+        try {
+            for (Object o : ApiClient.getArray("/api/inventory/finished-products")) {
+                nameBox.getItems().add(((JSONObject) o).getString("name"));
+            }
+        } catch (ApiClient.ApiException ignored) { }
+
+        ComboBox<String> categoryBox = new ComboBox<>();
+        categoryBox.setEditable(true);
+        categoryBox.getItems().addAll(CATEGORIES);
+        categoryBox.setPromptText("Select or type a category");
+
+        ComboBox<String> unitBox = new ComboBox<>();
+        unitBox.setEditable(true);
+        unitBox.getItems().addAll(UNITS);
+        unitBox.setPromptText("Select or type a unit");
 
         Button addButton = new Button("Add Product");
         addButton.getStyleClass().add("button-primary");
         Label statusLabel = newHiddenStatusLabel();
 
+        VBox inputs = new VBox(10, sectionTitle,
+                labeled("Name", nameBox), labeled("Category", categoryBox), labeled("Unit of measure", unitBox),
+                addButton, statusLabel);
+        inputs.getStyleClass().add("card");
+
+        VBox preview = FormLayout.previewCard("Preview");
+        Label nameValue = FormLayout.newPreviewValue();
+        Label categoryValue = FormLayout.newPreviewValue();
+        Label unitValue = FormLayout.newPreviewValue();
+        preview.getChildren().addAll(
+                FormLayout.previewRow("Name", nameValue),
+                FormLayout.previewRow("Category", categoryValue),
+                FormLayout.previewRow("Unit", unitValue)
+        );
+        bindPreview(nameBox, nameValue);
+        bindPreview(categoryBox, categoryValue);
+        bindPreview(unitBox, unitValue);
+
         addButton.setOnAction(e -> {
-            if (nameField.getText().isBlank() || categoryField.getText().isBlank() || unitField.getText().isBlank()) {
+            String name = textOf(nameBox), category = textOf(categoryBox), unit = textOf(unitBox);
+            if (name.isBlank() || category.isBlank() || unit.isBlank()) {
                 showError(statusLabel, "Fill in the name, category, and unit of measure.");
                 return;
             }
             try {
                 JSONObject body = new JSONObject();
-                body.put("name", nameField.getText().trim());
-                body.put("category", categoryField.getText().trim());
-                body.put("unitOfMeasure", unitField.getText().trim());
+                body.put("name", name.trim());
+                body.put("category", category.trim());
+                body.put("unitOfMeasure", unit.trim());
                 JSONObject response = ApiClient.post("/api/inventory/finished-product", body);
                 showSuccess(statusLabel, "Product added — ID " + response.getInt("productId") + ".");
-                nameField.clear(); categoryField.clear(); unitField.clear();
+                nameBox.getEditor().clear(); categoryBox.getEditor().clear(); unitBox.getEditor().clear();
+                nameBox.setValue(null); categoryBox.setValue(null); unitBox.setValue(null);
             } catch (ApiClient.ApiException ex) {
                 showError(statusLabel, ex.getMessage());
             }
         });
 
-        VBox card = new VBox(10, sectionTitle,
-                labeled("Name", nameField), labeled("Category", categoryField), labeled("Unit of measure", unitField),
-                addButton, statusLabel);
-        card.getStyleClass().add("card");
-        return card;
+        return FormLayout.twoColumn(inputs, preview);
     }
 
-    private static VBox buildMovementCard() {
+    private static Node buildMovementCard() {
         Label sectionTitle = new Label("Record Finished Product Stock Movement");
         sectionTitle.getStyleClass().add("section-title");
 
@@ -91,18 +127,37 @@ public class InventoryView {
         movementTypeBox.getItems().addAll("IN", "OUT");
         movementTypeBox.setPromptText("Movement type");
         movementTypeBox.setMaxWidth(Double.MAX_VALUE);
-        TextField quantityField = new TextField();
-        quantityField.setPromptText("e.g. 25");
+
+        Spinner<Double> quantitySpinner = new Spinner<>(0.0, 100000.0, 0.0, 1.0);
+        quantitySpinner.setEditable(true);
 
         Button recordButton = new Button("Record Movement");
         recordButton.getStyleClass().add("button-primary");
         Label statusLabel = newHiddenStatusLabel();
 
+        VBox inputs = new VBox(10, sectionTitle,
+                labeled("Product", productBox), labeled("Movement type", movementTypeBox), labeled("Quantity", quantitySpinner),
+                recordButton, statusLabel);
+        inputs.getStyleClass().add("card");
+
+        VBox preview = FormLayout.previewCard("Preview");
+        Label productValue = FormLayout.newPreviewValue();
+        Label typeValue = FormLayout.newPreviewValue();
+        Label qtyValue = FormLayout.newPreviewValue();
+        preview.getChildren().addAll(
+                FormLayout.previewRow("Product", productValue),
+                FormLayout.previewRow("Movement type", typeValue),
+                FormLayout.previewRow("Quantity", qtyValue)
+        );
+        productBox.valueProperty().addListener((obs, o, n) -> productValue.setText(n != null ? n.toString() : "—"));
+        movementTypeBox.valueProperty().addListener((obs, o, n) -> typeValue.setText(n != null ? n : "—"));
+        quantitySpinner.valueProperty().addListener((obs, o, n) -> qtyValue.setText(n != null ? String.valueOf(n) : "—"));
+
         recordButton.setOnAction(e -> {
             if (productBox.getValue() == null) { showError(statusLabel, "Select a product."); return; }
             if (movementTypeBox.getValue() == null) { showError(statusLabel, "Select IN or OUT."); return; }
-            Double quantity = parsePositiveDouble(quantityField.getText());
-            if (quantity == null) { showError(statusLabel, "Enter a valid quantity greater than 0."); return; }
+            double quantity = quantitySpinner.getValue() != null ? quantitySpinner.getValue() : 0.0;
+            if (quantity <= 0) { showError(statusLabel, "Enter a quantity greater than 0."); return; }
 
             try {
                 JSONObject body = new JSONObject();
@@ -113,20 +168,16 @@ public class InventoryView {
                 body.putOpt("referenceId", null);
                 ApiClient.post("/api/inventory/finished-product-movement", body);
                 showSuccess(statusLabel, "Movement recorded.");
-                quantityField.clear();
+                quantitySpinner.getValueFactory().setValue(0.0);
             } catch (ApiClient.ApiException ex) {
                 showError(statusLabel, ex.getMessage());
             }
         });
 
-        VBox card = new VBox(10, sectionTitle,
-                labeled("Product", productBox), labeled("Movement type", movementTypeBox), labeled("Quantity", quantityField),
-                recordButton, statusLabel);
-        card.getStyleClass().add("card");
-        return card;
+        return FormLayout.twoColumn(inputs, preview);
     }
 
-    private static VBox buildDamagedCard() {
+    private static Node buildDamagedCard() {
         Label sectionTitle = new Label("Record Damaged Product");
         sectionTitle.getStyleClass().add("section-title");
 
@@ -142,10 +193,14 @@ public class InventoryView {
             productBox.setPromptText("Couldn't load products");
         }
 
-        TextField quantityField = new TextField();
-        quantityField.setPromptText("e.g. 5");
-        TextField causeField = new TextField();
-        causeField.setPromptText("e.g. Pouch leak");
+        Spinner<Double> quantitySpinner = new Spinner<>(0.0, 100000.0, 0.0, 1.0);
+        quantitySpinner.setEditable(true);
+
+        ComboBox<String> causeBox = new ComboBox<>();
+        causeBox.setEditable(true);
+        causeBox.getItems().addAll(DAMAGE_CAUSES);
+        causeBox.setPromptText("Select or type a reason");
+
         ComboBox<String> stageBox = new ComboBox<>();
         stageBox.getItems().addAll("Production", "PostProduction");
         stageBox.setPromptText("Stage");
@@ -155,33 +210,63 @@ public class InventoryView {
         recordButton.getStyleClass().add("button-primary");
         Label statusLabel = newHiddenStatusLabel();
 
+        VBox inputs = new VBox(10, sectionTitle,
+                labeled("Product", productBox), labeled("Quantity", quantitySpinner),
+                labeled("Cause", causeBox), labeled("Stage", stageBox),
+                recordButton, statusLabel);
+        inputs.getStyleClass().add("card");
+
+        VBox preview = FormLayout.previewCard("Preview");
+        Label productValue = FormLayout.newPreviewValue();
+        Label qtyValue = FormLayout.newPreviewValue();
+        Label causeValue = FormLayout.newPreviewValue();
+        Label stageValue = FormLayout.newPreviewValue();
+        preview.getChildren().addAll(
+                FormLayout.previewRow("Product", productValue),
+                FormLayout.previewRow("Quantity", qtyValue),
+                FormLayout.previewRow("Cause", causeValue),
+                FormLayout.previewRow("Stage", stageValue)
+        );
+        productBox.valueProperty().addListener((obs, o, n) -> productValue.setText(n != null ? n.toString() : "—"));
+        quantitySpinner.valueProperty().addListener((obs, o, n) -> qtyValue.setText(n != null ? String.valueOf(n) : "—"));
+        bindPreview(causeBox, causeValue);
+        stageBox.valueProperty().addListener((obs, o, n) -> stageValue.setText(n != null ? n : "—"));
+
         recordButton.setOnAction(e -> {
             if (productBox.getValue() == null) { showError(statusLabel, "Select a product."); return; }
-            Double quantity = parsePositiveDouble(quantityField.getText());
-            if (quantity == null) { showError(statusLabel, "Enter a valid quantity greater than 0."); return; }
-            if (causeField.getText().isBlank()) { showError(statusLabel, "Enter a cause."); return; }
+            double quantity = quantitySpinner.getValue() != null ? quantitySpinner.getValue() : 0.0;
+            if (quantity <= 0) { showError(statusLabel, "Enter a quantity greater than 0."); return; }
+            String cause = textOf(causeBox);
+            if (cause.isBlank()) { showError(statusLabel, "Select or enter a cause."); return; }
             if (stageBox.getValue() == null) { showError(statusLabel, "Select a stage."); return; }
 
             try {
                 JSONObject body = new JSONObject();
                 body.put("productId", productBox.getValue().id());
                 body.put("quantity", quantity);
-                body.put("cause", causeField.getText().trim());
+                body.put("cause", cause.trim());
                 body.put("stage", stageBox.getValue());
                 ApiClient.post("/api/inventory/damaged", body);
                 showSuccess(statusLabel, "Damaged stock recorded.");
-                quantityField.clear(); causeField.clear();
+                quantitySpinner.getValueFactory().setValue(0.0);
+                causeBox.getEditor().clear(); causeBox.setValue(null);
             } catch (ApiClient.ApiException ex) {
                 showError(statusLabel, ex.getMessage());
             }
         });
 
-        VBox card = new VBox(10, sectionTitle,
-                labeled("Product", productBox), labeled("Quantity", quantityField),
-                labeled("Cause", causeField), labeled("Stage", stageBox),
-                recordButton, statusLabel);
-        card.getStyleClass().add("card");
-        return card;
+        return FormLayout.twoColumn(inputs, preview);
+    }
+
+    // ComboBox.valueProperty() only fires when a list item is picked, not
+    // while typing a custom value - listening on the editor's textProperty
+    // instead keeps the preview live either way.
+    private static void bindPreview(ComboBox<String> box, Label previewValue) {
+        box.getEditor().textProperty().addListener((obs, o, n) -> previewValue.setText(n == null || n.isBlank() ? "—" : n));
+    }
+
+    private static String textOf(ComboBox<String> box) {
+        return box.getEditor().getText() != null ? box.getEditor().getText() : "";
     }
 
     private static VBox labeled(String labelText, Control control) {
@@ -210,21 +295,5 @@ public class InventoryView {
         label.getStyleClass().setAll("status-success");
         label.setVisible(true);
         label.setManaged(true);
-    }
-
-    private static Double parsePositiveDouble(String text) {
-        if (text == null || text.isBlank()) return null;
-        try {
-            double value = Double.parseDouble(text.trim());
-            return value > 0 ? value : null;
-        } catch (NumberFormatException e) { return null; }
-    }
-
-    private static Integer parsePositiveInt(String text) {
-        if (text == null || text.isBlank()) return null;
-        try {
-            int value = Integer.parseInt(text.trim());
-            return value > 0 ? value : null;
-        } catch (NumberFormatException e) { return null; }
     }
 }

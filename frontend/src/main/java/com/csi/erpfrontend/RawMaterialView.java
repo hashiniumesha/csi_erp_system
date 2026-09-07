@@ -35,23 +35,37 @@ public class RawMaterialView {
         return scrollPane;
     }
 
-    private static VBox buildAddCard() {
+    private static Node buildAddCard() {
         Label sectionTitle = new Label("Add Raw Material");
         sectionTitle.getStyleClass().add("section-title");
 
         TextField nameField = new TextField();
         nameField.setPromptText("e.g. Sugar");
-        TextField reorderField = new TextField();
-        reorderField.setPromptText("e.g. 50");
+        Spinner<Double> reorderSpinner = new Spinner<>(0.0, 100000.0, 0.0, 1.0);
+        reorderSpinner.setEditable(true);
 
         Button requestButton = new Button("Request");
         requestButton.getStyleClass().add("button-primary");
         Label statusLabel = newHiddenStatusLabel();
 
+        VBox inputs = new VBox(10, sectionTitle,
+                labeled("Name", nameField), labeled("Reorder level", reorderSpinner),
+                requestButton, statusLabel);
+        inputs.getStyleClass().add("card");
+
+        VBox preview = FormLayout.previewCard("Preview");
+        Label nameValue = FormLayout.newPreviewValue();
+        Label reorderValue = FormLayout.newPreviewValue();
+        preview.getChildren().addAll(
+                FormLayout.previewRow("Name", nameValue),
+                FormLayout.previewRow("Reorder level", reorderValue)
+        );
+        nameField.textProperty().addListener((obs, o, n) -> nameValue.setText(n == null || n.isBlank() ? "—" : n));
+        reorderSpinner.valueProperty().addListener((obs, o, n) -> reorderValue.setText(n != null ? String.valueOf(n) : "—"));
+
         requestButton.setOnAction(e -> {
             if (nameField.getText().isBlank()) { showError(statusLabel, "Enter a name."); return; }
-            Double reorderLevel = parseNonNegativeDouble(reorderField.getText());
-            if (reorderLevel == null) { showError(statusLabel, "Enter a valid reorder level (0 or more)."); return; }
+            double reorderLevel = reorderSpinner.getValue() != null ? reorderSpinner.getValue() : 0.0;
 
             try {
                 JSONObject payload = new JSONObject();
@@ -59,20 +73,17 @@ public class RawMaterialView {
                 payload.put("reorderLevel", reorderLevel);
                 submitRequest("CREATE", null, payload);
                 showSuccess(statusLabel, "Request submitted. Please wait for a response from the Admin.");
-                nameField.clear(); reorderField.clear();
+                nameField.clear();
+                reorderSpinner.getValueFactory().setValue(0.0);
             } catch (ApiClient.ApiException ex) {
                 showError(statusLabel, ex.getMessage());
             }
         });
 
-        VBox card = new VBox(10, sectionTitle,
-                labeled("Name", nameField), labeled("Reorder level", reorderField),
-                requestButton, statusLabel);
-        card.getStyleClass().add("card");
-        return card;
+        return FormLayout.twoColumn(inputs, preview);
     }
 
-    private static VBox buildEditDeleteCard() {
+    private static Node buildEditDeleteCard() {
         Label sectionTitle = new Label("Edit / Delete Raw Material");
         sectionTitle.getStyleClass().add("section-title");
 
@@ -82,8 +93,8 @@ public class RawMaterialView {
 
         TextField nameField = new TextField();
         nameField.setPromptText("Name");
-        TextField reorderField = new TextField();
-        reorderField.setPromptText("Reorder level");
+        Spinner<Double> reorderSpinner = new Spinner<>(0.0, 100000.0, 0.0, 1.0);
+        reorderSpinner.setEditable(true);
         Label currentStockLabel = new Label();
         currentStockLabel.getStyleClass().add("muted-label");
         Label statusLabel = newHiddenStatusLabel();
@@ -100,11 +111,16 @@ public class RawMaterialView {
         }
 
         materialBox.valueProperty().addListener((obs, oldVal, newVal) -> {
-            if (newVal == null) { nameField.clear(); reorderField.clear(); currentStockLabel.setText(""); return; }
+            if (newVal == null) {
+                nameField.clear();
+                reorderSpinner.getValueFactory().setValue(0.0);
+                currentStockLabel.setText("");
+                return;
+            }
             JSONObject m = materialsById.get(newVal.id());
             if (m != null) {
                 nameField.setText(m.getString("name"));
-                reorderField.setText(String.valueOf(m.optDouble("reorderLevel", 0)));
+                reorderSpinner.getValueFactory().setValue(m.optDouble("reorderLevel", 0));
                 currentStockLabel.setText("Current stock: " + m.optDouble("currentStock", 0));
             }
         });
@@ -114,11 +130,32 @@ public class RawMaterialView {
         Button requestDeleteButton = new Button("Request Delete");
         requestDeleteButton.getStyleClass().add("button-secondary");
 
+        VBox inputs = new VBox(10, sectionTitle,
+                labeled("Raw material", materialBox), currentStockLabel,
+                labeled("Name", nameField), labeled("Reorder level", reorderSpinner),
+                new HBox(10, requestChangeButton, requestDeleteButton), statusLabel);
+        inputs.getStyleClass().add("card");
+
+        VBox preview = FormLayout.previewCard("Preview");
+        Label materialValue = FormLayout.newPreviewValue();
+        Label nameValue = FormLayout.newPreviewValue();
+        Label reorderValue = FormLayout.newPreviewValue();
+        Label stockValue = FormLayout.newPreviewValue();
+        preview.getChildren().addAll(
+                FormLayout.previewRow("Raw material", materialValue),
+                FormLayout.previewRow("New name", nameValue),
+                FormLayout.previewRow("New reorder level", reorderValue),
+                FormLayout.previewRow("Current stock", stockValue)
+        );
+        materialBox.valueProperty().addListener((obs, o, n) -> materialValue.setText(n != null ? n.toString() : "—"));
+        nameField.textProperty().addListener((obs, o, n) -> nameValue.setText(n == null || n.isBlank() ? "—" : n));
+        reorderSpinner.valueProperty().addListener((obs, o, n) -> reorderValue.setText(n != null ? String.valueOf(n) : "—"));
+        currentStockLabel.textProperty().addListener((obs, o, n) -> stockValue.setText(n == null || n.isBlank() ? "—" : n));
+
         requestChangeButton.setOnAction(e -> {
             if (materialBox.getValue() == null) { showError(statusLabel, "Select a raw material first."); return; }
             if (nameField.getText().isBlank()) { showError(statusLabel, "Enter a name."); return; }
-            Double reorderLevel = parseNonNegativeDouble(reorderField.getText());
-            if (reorderLevel == null) { showError(statusLabel, "Enter a valid reorder level (0 or more)."); return; }
+            double reorderLevel = reorderSpinner.getValue() != null ? reorderSpinner.getValue() : 0.0;
 
             try {
                 JSONObject payload = new JSONObject();
@@ -141,14 +178,7 @@ public class RawMaterialView {
             }
         });
 
-        HBox buttonRow = new HBox(10, requestChangeButton, requestDeleteButton);
-
-        VBox card = new VBox(10, sectionTitle,
-                labeled("Raw material", materialBox), currentStockLabel,
-                labeled("Name", nameField), labeled("Reorder level", reorderField),
-                buttonRow, statusLabel);
-        card.getStyleClass().add("card");
-        return card;
+        return FormLayout.twoColumn(inputs, preview);
     }
 
     // Lets the requester see Pending/Approved/Rejected without needing to
@@ -246,13 +276,5 @@ public class RawMaterialView {
         label.getStyleClass().setAll("status-success");
         label.setVisible(true);
         label.setManaged(true);
-    }
-
-    private static Double parseNonNegativeDouble(String text) {
-        if (text == null || text.isBlank()) return null;
-        try {
-            double value = Double.parseDouble(text.trim());
-            return value >= 0 ? value : null;
-        } catch (NumberFormatException e) { return null; }
     }
 }
