@@ -31,7 +31,7 @@ public class RawMaterialView {
 
         ScrollPane scrollPane = new ScrollPane(layout);
         scrollPane.setFitToWidth(true);
-        scrollPane.getStyleClass().add("page-bg");
+        scrollPane.getStyleClass().add("inventory-bg");
         return scrollPane;
     }
 
