@@ -46,11 +46,18 @@ public class RoleAccessFilter extends OncePerRequestFilter {
     // several dashboards) stay open to every role. Values follow the same
     // convention as RESTRICTED_PREFIXES: Admin is implicitly allowed and
     // never needs to be listed; an empty list means Admin-only.
+    //
+    // Raw material create/edit/delete used to be Inventory-Manager-allowed
+    // directly; now that those changes go through an approval request
+    // instead (see ApprovalRequestController), only Admin can call the raw
+    // endpoints directly - the same operations the approval flow itself
+    // performs once a request is approved.
     private static final Map<String, List<String>> METHOD_PATH_RESTRICTIONS = Map.of(
             "POST /api/users", List.of(),
-            "POST /api/raw-materials", List.of("Inventory Manager"),
-            "PUT /api/raw-materials/", List.of("Inventory Manager"),
-            "DELETE /api/raw-materials/", List.of("Inventory Manager")
+            "POST /api/raw-materials", List.of(),
+            "PUT /api/raw-materials/", List.of(),
+            "DELETE /api/raw-materials/", List.of(),
+            "POST /api/approval-requests", List.of("Inventory Manager")
     );
 
     @Override
@@ -66,7 +73,20 @@ public class RoleAccessFilter extends OncePerRequestFilter {
             return;
         }
 
-        String matchedMethodPath = METHOD_PATH_RESTRICTIONS.keySet().stream()
+        // Approving/rejecting a request is Admin-only. Checked ahead of the
+        // generic map below since these paths share the "POST
+        // /api/approval-requests" prefix with plain submission (which is
+        // Inventory-Manager-allowed) — the /{id}/approve and /{id}/reject
+        // suffixes can't be told apart from that shared prefix alone.
+        boolean isApprovalDecision = "POST".equals(request.getMethod())
+                && path.startsWith("/api/approval-requests/")
+                && (path.endsWith("/approve") || path.endsWith("/reject"));
+        if (isApprovalDecision && !"Admin".equals(role)) {
+            forbidden(response);
+            return;
+        }
+
+        String matchedMethodPath = isApprovalDecision ? null : METHOD_PATH_RESTRICTIONS.keySet().stream()
                 .filter(methodPath::startsWith)
                 .findFirst()
                 .orElse(null);
