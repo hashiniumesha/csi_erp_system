@@ -40,7 +40,11 @@ public class RoleAccessFilter extends OncePerRequestFilter {
             // Deliberately QC Officer here, not Inventory Manager - Admin
             // and QC review damage/wastage, even though Inventory Manager
             // is who records it via /api/inventory/damaged.
-            "/api/damaged-products", List.of("QC Officer")
+            "/api/damaged-products", List.of("QC Officer"),
+            // Per proposal section 5.7's access matrix: P&L is Admin-only
+            // (the "Accountant" role it also lists was never implemented
+            // in this system - see the earlier scope-reduction decision).
+            "/api/reports/profit-loss", List.of()
     );
 
     // Unlike RESTRICTED_PREFIXES, these are keyed by "METHOD /path/prefix"
