@@ -44,6 +44,7 @@ public class DashboardShell {
 
         if (admin) {
             modules.put("Users", AdminUsersView::build);
+            modules.put("Reports", ReportsView::build);
         }
 
         if (admin || "QC Officer".equals(role)) {

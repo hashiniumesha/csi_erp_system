@@ -53,6 +53,31 @@ public class ApiClient {
         send("DELETE", path, null);
     }
 
+    // For binary responses (currently: report PDFs) - BodyHandlers.ofString
+    // would corrupt PDF bytes trying to decode them as text, so this is a
+    // separate path rather than reusing send().
+    public static byte[] getBytes(String path) {
+        try {
+            HttpRequest.Builder builder = HttpRequest.newBuilder().uri(URI.create(BASE_URL + path));
+            if (Session.getRoleName() != null) {
+                builder.header("X-User-Role", Session.getRoleName());
+            }
+            HttpResponse<byte[]> response = CLIENT.send(builder.GET().build(), HttpResponse.BodyHandlers.ofByteArray());
+
+            if (response.statusCode() >= 200 && response.statusCode() < 300) {
+                return response.body();
+            }
+            String errorText = new String(response.body(), java.nio.charset.StandardCharsets.UTF_8);
+            throw new ApiException(friendlyMessage(response.statusCode(), errorText));
+        } catch (ApiException e) {
+            throw e;
+        } catch (java.net.ConnectException e) {
+            throw new ApiException("Can't reach the server. Make sure the backend is running.");
+        } catch (Exception e) {
+            throw new ApiException("Something went wrong: " + e.getMessage());
+        }
+    }
+
     private static String get(String path) {
         return send("GET", path, null);
     }
