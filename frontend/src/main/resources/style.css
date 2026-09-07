@@ -264,3 +264,12 @@
     -fx-padding: 8 12 8 12;
     -fx-font-size: 12px;
 }
+
+.status-pending {
+    -fx-text-fill: -csi-accent-dark;
+    -fx-background-color: -csi-cream;
+    -fx-background-radius: 6;
+    -fx-padding: 4 10 4 10;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+}

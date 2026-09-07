@@ -40,6 +40,7 @@ public class DashboardShell {
         boolean admin = Session.isAdmin();
 
         modules.put("Dashboard", DashboardHomeView::build);
+        modules.put("Messages", MessagesView::build);
 
         if (admin) {
             modules.put("Users", AdminUsersView::build);
@@ -48,8 +49,9 @@ public class DashboardShell {
         if (admin || "QC Officer".equals(role)) {
             modules.put("Production / QC", QCView::build);
         }
-        if (admin || "Inventory Manager".equals(role)) {
+                if (admin || "Inventory Manager".equals(role)) {
             modules.put("Inventory", InventoryView::build);
+            modules.put("Raw Materials", RawMaterialView::build);
         }
         if (admin || "Sales Officer".equals(role)) {
             modules.put("Sales & Billing", SalesView::build);
