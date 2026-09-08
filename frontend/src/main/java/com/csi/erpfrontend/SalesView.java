@@ -24,13 +24,12 @@ public class SalesView {
     }
 
     public static Node build() {
-        Label title = new Label("Sales & Billing");
-        title.getStyleClass().add("page-title");
+        HBox header = PageHeader.build("Sales & Billing");
 
         VBox invoiceList = new VBox(8);
         refreshInvoiceList(invoiceList);
 
-        VBox layout = new VBox(20, title, buildCustomerCard(), buildInvoiceCard(invoiceList), buildCollectionCard(),
+        VBox layout = new VBox(20, header, buildCustomerCard(), buildInvoiceCard(invoiceList), buildCollectionCard(),
                 buildInvoiceListCard(invoiceList));
         layout.setPadding(new Insets(28));
 
@@ -283,7 +282,10 @@ public class SalesView {
         view.getStyleClass().add("button-secondary");
         view.setOnAction(e -> InvoicePreviewView.show(invoiceId));
 
-        return new HBox(16, id, customer, officer, type, total, date, view);
+        HBox row = new HBox(16, id, customer, officer, type, total, date, view);
+        row.getStyleClass().add("data-row");
+        row.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+        return row;
     }
 
     private static VBox labeled(String labelText, Control control) {

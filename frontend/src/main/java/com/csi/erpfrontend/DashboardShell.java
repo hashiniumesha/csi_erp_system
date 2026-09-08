@@ -102,6 +102,7 @@ public class DashboardShell {
             navButton.getStyleClass().add("sidebar-nav-button");
             navButton.setOnAction(e -> {
                 content.getChildren().setAll(entry.getValue().get());
+                AppNav.setRefreshHandler(() -> content.getChildren().setAll(entry.getValue().get()));
                 if (activeButton[0] != null) {
                     activeButton[0].getStyleClass().remove("sidebar-nav-button-active");
                 }

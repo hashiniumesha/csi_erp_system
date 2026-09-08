@@ -5,35 +5,38 @@
  * custom looked-up color. Every screen references them by name below, so
  * the whole app re-themes from this one block.
  *
- * Real brand palette (Coolors, 5 swatches):
- *   Dry Sage    #C9CBA3   Cream Gold  #FFE1A8   Terracotta  #E26D5C
- *   Wine        #723D46   Deep Wine   #472D30
- * -csi-accent-dark and -csi-text-muted are the only two colors below NOT
- * a literal swatch from that palette — they're a manually darkened shade
- * of Terracotta and a softened Wine, needed for hover states and body text
- * respectively, kept in the same family on purpose.
+ * Client-selected palette (4 swatches):
+ *   Parchment   #F7EFDA   Pistachio   #BADD7F
+ *   Melon       #EFACA5   Fern Green  #3E8440
+ * -csi-accent-dark, -csi-text-dark and -csi-border are the only colors
+ * below not a literal swatch - they're darkened/softened shades of Fern
+ * Green and Parchment respectively, needed for hover states, body text and
+ * card borders, kept in the same family on purpose. -csi-danger stays a
+ * conventional red (errors need to read as errors regardless of brand
+ * palette) rather than being forced into the palette.
  */
 .root {
-    -csi-sidebar-bg: #472D30;
-    -csi-sidebar-bg-active: #723D46;
-    -csi-accent: #E26D5C;
-    -csi-accent-dark: #C15748;
-    -csi-page-bg: #FAF7EF;
-    -csi-card-bg: rgba(255, 255, 255, 0.85);
-    -csi-text-dark: #472D30;
-    -csi-text-muted: #8A6B67;
-    -csi-text-on-sidebar: #FFE1A8;
-    -csi-text-on-sidebar-muted: #C9CBA3;
-    -csi-border: #E7E1D3;
+    -csi-page-bg: #F7EFDA;
+    -csi-card-bg: rgba(255, 255, 255, 0.90);
+    -csi-sidebar-bg: #2E5E30;
+    -csi-sidebar-bg-active: #274F29;
+    -csi-accent: #3E8440;
+    -csi-accent-dark: #2E6530;
+    -csi-text-dark: #263A24;
+    -csi-text-muted: #6C7A68;
+    -csi-text-on-sidebar: #F7EFDA;
+    -csi-text-on-sidebar-muted: #C9DDBD;
+    -csi-border: #E5DEC6;
     -csi-danger: #B3392A;
     -csi-danger-bg: #FBEAE7;
-    -csi-success: #5C7A4E;
-    -csi-success-bg: #EAEEE2;
-    -csi-sage: #C9CBA3;
-    -csi-cream: #FFE1A8;
+    -csi-success: #2E6530;
+    -csi-success-bg: #E7F1E3;
+    -csi-pistachio: #BADD7F;
+    -csi-melon: #EFACA5;
 
-    -fx-font-family: "Segoe UI", sans-serif;
+    -fx-font-family: "Montserrat", "Segoe UI", sans-serif;
     -fx-background-color: -csi-page-bg;
+    -fx-font-size: 13px;
 }
 
 /* ---------- generic page/card structure ---------- */
@@ -41,68 +44,62 @@
     -fx-background-color: -csi-page-bg;
 }
 
-/* Used only by Inventory and Raw Materials (the screens asked for a
-   background image) - everywhere else keeps the plain .page-bg. Cards
-   are semi-transparent (see -csi-card-bg above) so the photo shows
-   through instead of being fully hidden behind solid white. */
-.inventory-bg {
-    -fx-background-color: -csi-page-bg;
-    -fx-background-image: url("background_inventory.jpg");
-    -fx-background-size: cover;
-    -fx-background-position: center center;
-    -fx-background-repeat: no-repeat;
-}
-
-/* Login screen background - the file just needs to exist at this path for
-   this to take effect; if it's missing, JavaFX quietly falls back to
-   -fx-background-color below instead of erroring. */
+/* Login screen background only - every other screen uses the plain
+   .page-bg above. The file just needs to exist at this path for this to
+   take effect; if it's missing, JavaFX quietly falls back to
+   -fx-background-color instead of erroring. */
 .login-bg {
     -fx-background-color: -csi-page-bg;
-    -fx-background-image: url("background_login.jpg");
+    -fx-background-image: url("login_background.jpeg");
     -fx-background-size: cover;
     -fx-background-position: center center;
     -fx-background-repeat: no-repeat;
 }
 
 /* A ScrollPane paints its own "viewport" region on top of its content -
-   by default a near-white fill that was silently covering .inventory-bg's
-   image underneath it. This is what let the image show through. Scoped
-   to ScrollPane generally since a solid fill here was always invisible
-   against -csi-page-bg anyway - nothing else changes visually. */
+   by default a near-white fill that would otherwise silently cover a
+   background image underneath it (e.g. on the login screen). Scoped to
+   ScrollPane generally since a solid fill here is always invisible
+   against the plain -csi-page-bg anyway - nothing else changes visually. */
 .scroll-pane > .viewport {
     -fx-background-color: transparent;
 }
+.scroll-pane {
+    -fx-background-color: transparent;
+    -fx-background-insets: 0;
+}
 
 .preview-card {
-    -fx-background-color: rgba(250, 247, 239, 0.88);
-    -fx-border-color: -csi-cream;
+    -fx-background-color: rgba(255, 255, 255, 0.95);
+    -fx-border-color: -csi-pistachio;
     -fx-border-width: 2;
 }
 
 .card {
     -fx-background-color: -csi-card-bg;
-    -fx-background-radius: 10;
-    -fx-border-radius: 10;
+    -fx-background-radius: 12;
+    -fx-border-radius: 12;
     -fx-border-color: -csi-border;
     -fx-border-width: 1;
-    -fx-padding: 20;
+    -fx-padding: 22;
+    -fx-effect: dropshadow(gaussian, rgba(38, 58, 36, 0.08), 10, 0, 0, 2);
 }
 
 .page-title {
-    -fx-font-size: 20px;
+    -fx-font-size: 24px;
     -fx-font-weight: bold;
     -fx-text-fill: -csi-text-dark;
 }
 
 .section-title {
-    -fx-font-size: 14px;
+    -fx-font-size: 16px;
     -fx-font-weight: bold;
     -fx-text-fill: -csi-text-dark;
 }
 
 .muted-label {
     -fx-text-fill: -csi-text-muted;
-    -fx-font-size: 12px;
+    -fx-font-size: 12.5px;
 }
 
 /* ---------- sidebar / dashboard shell ---------- */
@@ -113,25 +110,25 @@
 
 .sidebar-brand {
     -fx-text-fill: -csi-text-on-sidebar;
-    -fx-font-size: 16px;
+    -fx-font-size: 17px;
     -fx-font-weight: bold;
 }
 
 .sidebar-name {
     -fx-text-fill: -csi-text-on-sidebar;
-    -fx-font-size: 13px;
+    -fx-font-size: 13.5px;
     -fx-font-weight: bold;
 }
 
 .sidebar-role {
     -fx-text-fill: -csi-text-on-sidebar-muted;
-    -fx-font-size: 11px;
+    -fx-font-size: 11.5px;
 }
 
 .sidebar-avatar {
-    -fx-background-color: -csi-accent;
+    -fx-background-color: -csi-melon;
     -fx-background-radius: 999;
-    -fx-text-fill: white;
+    -fx-text-fill: #472D30;
     -fx-font-size: 15px;
     -fx-font-weight: bold;
 }
@@ -139,9 +136,9 @@
 .sidebar-nav-button {
     -fx-background-color: transparent;
     -fx-text-fill: -csi-text-on-sidebar-muted;
-    -fx-font-size: 13px;
+    -fx-font-size: 13.5px;
     -fx-alignment: center-left;
-    -fx-padding: 12 24 12 24;
+    -fx-padding: 13 24 13 24;
     -fx-background-radius: 0;
     -fx-max-width: 999;
     -fx-cursor: hand;
@@ -154,7 +151,7 @@
 
 .sidebar-nav-button-active {
     -fx-background-color: -csi-sidebar-bg-active;
-    -fx-text-fill: -csi-accent;
+    -fx-text-fill: -csi-pistachio;
     -fx-font-weight: bold;
 }
 
@@ -162,16 +159,17 @@
 .text-field, .combo-box, .date-picker, .spinner {
     -fx-background-color: white;
     -fx-border-color: -csi-border;
-    -fx-border-radius: 6;
-    -fx-background-radius: 6;
-    -fx-padding: 4 8 4 8;
-    -fx-pref-width: 340;
-    -fx-max-width: 340;
-    -fx-font-size: 12px;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+    -fx-padding: 7 10 7 10;
+    -fx-pref-width: 360;
+    -fx-max-width: 360;
+    -fx-font-size: 13px;
 }
 
 .text-field:focused, .combo-box:focused, .date-picker:focused, .spinner:focused {
     -fx-border-color: -csi-accent;
+    -fx-border-width: 1.5;
 }
 
 /* An editable ComboBox/Spinner nests its own TextField inside for typing.
@@ -200,13 +198,13 @@
    feeding a live preview panel - opts back in with this class rather
    than every field defaulting to full width. */
 .field-wide, .field-wide .text-field, .field-wide .combo-box, .field-wide .date-picker {
-    -fx-pref-width: 420;
-    -fx-max-width: 420;
+    -fx-pref-width: 440;
+    -fx-max-width: 440;
 }
 
 .field-label {
     -fx-text-fill: -csi-text-dark;
-    -fx-font-size: 12px;
+    -fx-font-size: 12.5px;
     -fx-font-weight: bold;
 }
 
@@ -215,8 +213,9 @@
     -fx-background-color: -csi-accent;
     -fx-text-fill: white;
     -fx-font-weight: bold;
-    -fx-background-radius: 6;
-    -fx-padding: 9 18 9 18;
+    -fx-font-size: 13px;
+    -fx-background-radius: 8;
+    -fx-padding: 11 22 11 22;
     -fx-cursor: hand;
 }
 
@@ -224,18 +223,25 @@
     -fx-background-color: -csi-accent-dark;
 }
 
+.button-primary:pressed {
+    -fx-background-color: derive(-csi-accent-dark, -10%);
+}
+
 .button-secondary {
-    -fx-background-color: transparent;
+    -fx-background-color: white;
     -fx-text-fill: -csi-text-dark;
+    -fx-font-size: 13px;
     -fx-border-color: -csi-border;
-    -fx-border-radius: 6;
-    -fx-background-radius: 6;
-    -fx-padding: 9 18 9 18;
+    -fx-border-width: 1.4;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+    -fx-padding: 11 22 11 22;
     -fx-cursor: hand;
 }
 
 .button-secondary:hover {
     -fx-background-color: -csi-page-bg;
+    -fx-border-color: -csi-accent;
 }
 
 /* For a destructive action (e.g. "Request Delete") that needs to read as
@@ -244,10 +250,12 @@
 .button-danger {
     -fx-background-color: transparent;
     -fx-text-fill: -csi-danger;
+    -fx-font-size: 13px;
     -fx-border-color: -csi-danger;
-    -fx-border-radius: 6;
-    -fx-background-radius: 6;
-    -fx-padding: 9 18 9 18;
+    -fx-border-width: 1.4;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+    -fx-padding: 11 22 11 22;
     -fx-cursor: hand;
 }
 
@@ -257,41 +265,42 @@
 
 /* ---------- dashboard home (stat cards + charts) ---------- */
 .dashboard-welcome {
-    -fx-font-size: 22px;
+    -fx-font-size: 24px;
     -fx-font-weight: bold;
     -fx-text-fill: -csi-text-dark;
 }
 
 .dashboard-subtitle {
-    -fx-font-size: 13px;
+    -fx-font-size: 14px;
     -fx-text-fill: -csi-text-muted;
 }
 
 .stat-card {
     -fx-background-color: -csi-card-bg;
-    -fx-background-radius: 10;
-    -fx-border-radius: 10;
+    -fx-background-radius: 12;
+    -fx-border-radius: 12;
     -fx-border-color: -csi-border;
-    -fx-border-width: 1 1 1 4;
-    -fx-padding: 16 20 16 16;
-    -fx-min-width: 190;
+    -fx-border-width: 1 1 1 5;
+    -fx-padding: 18 22 18 18;
+    -fx-min-width: 200;
+    -fx-effect: dropshadow(gaussian, rgba(38, 58, 36, 0.08), 8, 0, 0, 2);
 }
 
 /* Left-border accent color, cycle through the palette per card so the
    dashboard reads as colorful rather than one flat accent repeated. */
-.stat-card-terracotta { -fx-border-color: -csi-border -csi-border -csi-border -csi-accent; }
-.stat-card-wine       { -fx-border-color: -csi-border -csi-border -csi-border -csi-sidebar-bg-active; }
-.stat-card-sage       { -fx-border-color: -csi-border -csi-border -csi-border -csi-sage; }
-.stat-card-cream      { -fx-border-color: -csi-border -csi-border -csi-border -csi-cream; }
+.stat-card-terracotta { -fx-border-color: -csi-border -csi-border -csi-border -csi-melon; }
+.stat-card-wine       { -fx-border-color: -csi-border -csi-border -csi-border -csi-sidebar-bg; }
+.stat-card-sage       { -fx-border-color: -csi-border -csi-border -csi-border -csi-pistachio; }
+.stat-card-cream      { -fx-border-color: -csi-border -csi-border -csi-border -csi-accent; }
 
 .stat-card-value {
-    -fx-font-size: 26px;
+    -fx-font-size: 28px;
     -fx-font-weight: bold;
     -fx-text-fill: -csi-text-dark;
 }
 
 .stat-card-label {
-    -fx-font-size: 12px;
+    -fx-font-size: 12.5px;
     -fx-text-fill: -csi-text-muted;
 }
 
@@ -300,30 +309,31 @@
    rather than one plain list - same left-border-accent idea as stat cards. */
 .notification-card {
     -fx-background-color: -csi-card-bg;
-    -fx-background-radius: 10;
-    -fx-border-radius: 10;
+    -fx-background-radius: 12;
+    -fx-border-radius: 12;
     -fx-border-color: -csi-border;
-    -fx-border-width: 1 1 1 4;
-    -fx-padding: 14 18 14 18;
+    -fx-border-width: 1 1 1 5;
+    -fx-padding: 16 20 16 20;
 }
 
-.notification-card-pending  { -fx-border-color: -csi-border -csi-border -csi-border -csi-cream; }
+.notification-card-pending  { -fx-border-color: -csi-border -csi-border -csi-border -csi-melon; }
 .notification-card-approved { -fx-border-color: -csi-border -csi-border -csi-border -csi-success; }
 .notification-card-rejected { -fx-border-color: -csi-border -csi-border -csi-border -csi-danger; }
 
 .notification-title {
-    -fx-font-size: 13px;
+    -fx-font-size: 14px;
     -fx-font-weight: bold;
     -fx-text-fill: -csi-text-dark;
 }
 
 .chart-card {
     -fx-background-color: -csi-card-bg;
-    -fx-background-radius: 10;
-    -fx-border-radius: 10;
+    -fx-background-radius: 12;
+    -fx-border-radius: 12;
     -fx-border-color: -csi-border;
     -fx-border-width: 1;
-    -fx-padding: 16;
+    -fx-padding: 18;
+    -fx-effect: dropshadow(gaussian, rgba(38, 58, 36, 0.08), 8, 0, 0, 2);
 }
 
 /* ---------- charts (pie/bar series recolored to the palette,
@@ -333,17 +343,17 @@
 }
 
 .chart-legend-item-symbol.default-color0 { -fx-background-color: -csi-accent; }
-.chart-legend-item-symbol.default-color1 { -fx-background-color: -csi-sidebar-bg-active; }
-.chart-legend-item-symbol.default-color2 { -fx-background-color: -csi-sage; }
-.chart-legend-item-symbol.default-color3 { -fx-background-color: -csi-danger; }
+.chart-legend-item-symbol.default-color1 { -fx-background-color: -csi-melon; }
+.chart-legend-item-symbol.default-color2 { -fx-background-color: -csi-pistachio; }
+.chart-legend-item-symbol.default-color3 { -fx-background-color: -csi-sidebar-bg; }
 
 .default-color0.chart-pie { -fx-pie-color: -csi-accent; }
-.default-color1.chart-pie { -fx-pie-color: -csi-sidebar-bg-active; }
-.default-color2.chart-pie { -fx-pie-color: -csi-cream; }
-.default-color3.chart-pie { -fx-pie-color: -csi-danger; }
+.default-color1.chart-pie { -fx-pie-color: -csi-melon; }
+.default-color2.chart-pie { -fx-pie-color: -csi-pistachio; }
+.default-color3.chart-pie { -fx-pie-color: -csi-sidebar-bg; }
 
 .default-color0.chart-bar { -fx-bar-fill: -csi-accent; }
-.default-color1.chart-bar { -fx-bar-fill: -csi-sage; }
+.default-color1.chart-bar { -fx-bar-fill: -csi-melon; }
 
 .axis-tick-mark, .axis-minor-tick-mark { -fx-stroke: -csi-border; }
 .axis { -fx-tick-label-fill: -csi-text-muted; }
@@ -352,24 +362,121 @@
 .status-error {
     -fx-text-fill: -csi-danger;
     -fx-background-color: -csi-danger-bg;
-    -fx-background-radius: 6;
-    -fx-padding: 8 12 8 12;
-    -fx-font-size: 12px;
+    -fx-background-radius: 8;
+    -fx-padding: 9 14 9 14;
+    -fx-font-size: 12.5px;
 }
 
 .status-success {
     -fx-text-fill: -csi-success;
     -fx-background-color: -csi-success-bg;
-    -fx-background-radius: 6;
-    -fx-padding: 8 12 8 12;
-    -fx-font-size: 12px;
+    -fx-background-radius: 8;
+    -fx-padding: 9 14 9 14;
+    -fx-font-size: 12.5px;
 }
 
 .status-pending {
-    -fx-text-fill: -csi-accent-dark;
-    -fx-background-color: -csi-cream;
-    -fx-background-radius: 6;
+    -fx-text-fill: #6B4A1E;
+    -fx-background-color: -csi-melon;
+    -fx-background-radius: 8;
     -fx-padding: 4 10 4 10;
-    -fx-font-size: 11px;
+    -fx-font-size: 11.5px;
     -fx-font-weight: bold;
+}
+
+/* ---------- data rows (the HBox "table rows" used across Sales,
+   Inventory, QC, Damaged Products, User Management lists) ---------- */
+.data-row {
+    -fx-background-color: white;
+    -fx-background-radius: 8;
+    -fx-border-radius: 8;
+    -fx-border-color: -csi-border;
+    -fx-border-width: 1;
+    -fx-padding: 12 16 12 16;
+}
+
+.data-row:hover {
+    -fx-border-color: -csi-accent;
+}
+
+.data-row-header {
+    -fx-background-color: transparent;
+    -fx-padding: 4 16 8 16;
+}
+.data-row-header .label {
+    -fx-font-weight: bold;
+    -fx-text-fill: -csi-text-dark;
+    -fx-font-size: 12px;
+}
+
+/* ---------- Invoice Preview / PDF-style on-screen document ---------- */
+.invoice-scroll, .invoice-scroll .viewport {
+    -fx-background-color: -csi-page-bg;
+}
+
+.invoice-document {
+    -fx-background-color: white;
+    -fx-background-radius: 10;
+    -fx-border-color: -csi-border;
+    -fx-border-width: 1;
+    -fx-border-radius: 10;
+    -fx-effect: dropshadow(gaussian, rgba(38, 58, 36, 0.12), 16, 0, 0, 4);
+}
+
+.invoice-company-name {
+    -fx-font-size: 19px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -csi-text-dark;
+}
+
+.invoice-doc-title {
+    -fx-font-size: 22px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -csi-accent;
+}
+
+.invoice-party-name {
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -csi-text-dark;
+}
+
+.invoice-items-table {
+    -fx-border-color: -csi-border;
+    -fx-border-width: 0 0 1 0;
+}
+
+.invoice-table-header-row {
+    -fx-padding: 8 4 8 4;
+    -fx-border-color: -csi-text-dark;
+    -fx-border-width: 0 0 1.5 0;
+}
+
+.invoice-table-header-cell {
+    -fx-font-weight: bold;
+    -fx-text-fill: -csi-text-dark;
+    -fx-font-size: 12.5px;
+}
+
+.invoice-table-row {
+    -fx-padding: 9 4 9 4;
+    -fx-border-color: -csi-border;
+    -fx-border-width: 0 0 1 0;
+}
+
+.invoice-table-cell {
+    -fx-font-size: 12.5px;
+    -fx-text-fill: -csi-text-dark;
+}
+
+.invoice-total-label {
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -csi-text-dark;
+}
+
+.invoice-total-value {
+    -fx-font-size: 19px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -csi-accent;
 }

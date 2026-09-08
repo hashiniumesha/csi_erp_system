@@ -8,43 +8,55 @@
 
     <!--
       Profit & Loss report, per proposal section 5.7: "Monthly income vs.
-      expenditure analysis". Revenue = invoice totals in the period.
+      expenditure analysis" - extended to Weekly/Monthly/Yearly (see
+      reportTypeLabel). Revenue = total invoice value in the period.
       Expenditure = approved GRN raw-material cost in the period. This is a
       documented simplification (no labor/overhead/damage-cost tracking
       exists in the schema), not a full accounting P&L - the report says so
       explicitly so it can never be mistaken for one.
     -->
 
+    <parameter name="logoImage" class="java.io.InputStream"/>
+    <parameter name="reportTypeLabel" class="java.lang.String"/>
     <parameter name="periodLabel" class="java.lang.String"/>
     <parameter name="generatedAt" class="java.lang.String"/>
     <parameter name="totalRevenue" class="java.lang.Double"/>
     <parameter name="totalExpenditure" class="java.lang.Double"/>
     <parameter name="netProfit" class="java.lang.Double"/>
 
-    <field name="date" class="java.lang.String"/>
+    <field name="label" class="java.lang.String"/>
     <field name="revenue" class="java.lang.Double"/>
     <field name="expenditure" class="java.lang.Double"/>
-    <field name="netProfit" class="java.lang.Double"/>
+    <field name="netResult" class="java.lang.Double"/>
 
     <title>
-        <band height="110">
+        <band height="130">
+            <image>
+                <reportElement x="0" y="0" width="44" height="44"/>
+                <imageExpression><![CDATA[$P{logoImage}]]></imageExpression>
+            </image>
             <staticText>
-                <reportElement x="0" y="0" width="535" height="24"/>
-                <textElement><font size="16" isBold="true"/></textElement>
-                <text><![CDATA[Ceylon Sweets Island — Profit & Loss Report]]></text>
+                <reportElement x="54" y="0" width="481" height="20"/>
+                <textElement><font size="15" isBold="true"/></textElement>
+                <text><![CDATA[Ceylon Sweets Island]]></text>
             </staticText>
             <textField>
-                <reportElement x="0" y="28" width="535" height="16"/>
+                <reportElement x="54" y="20" width="481" height="18"/>
+                <textElement><font size="13" isBold="true"/></textElement>
+                <textFieldExpression><![CDATA[$P{reportTypeLabel}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement x="0" y="52" width="535" height="16"/>
                 <textElement><font size="11"/></textElement>
                 <textFieldExpression><![CDATA["Period: " + $P{periodLabel}]]></textFieldExpression>
             </textField>
             <textField>
-                <reportElement x="0" y="46" width="535" height="14"/>
+                <reportElement x="0" y="70" width="535" height="14"/>
                 <textElement><font size="9" isItalic="true"/></textElement>
                 <textFieldExpression><![CDATA["Generated: " + $P{generatedAt}]]></textFieldExpression>
             </textField>
             <staticText>
-                <reportElement x="0" y="66" width="535" height="34"/>
+                <reportElement x="0" y="90" width="535" height="34"/>
                 <textElement><font size="8" isItalic="true"/></textElement>
                 <text><![CDATA[Note: revenue is total invoice value in this period. Expenditure is approved raw-material purchase cost (GRN) in this period. This figure does not include labor, overhead, or damaged-stock cost, and is not a certified accounting statement.]]></text>
             </staticText>
@@ -56,7 +68,7 @@
             <staticText>
                 <reportElement x="0" y="0" width="135" height="18"/>
                 <textElement><font size="10" isBold="true"/></textElement>
-                <text><![CDATA[Date]]></text>
+                <text><![CDATA[Period]]></text>
             </staticText>
             <staticText>
                 <reportElement x="135" y="0" width="130" height="18"/>
@@ -81,7 +93,7 @@
             <textField>
                 <reportElement x="0" y="0" width="135" height="16"/>
                 <textElement><font size="9"/></textElement>
-                <textFieldExpression><![CDATA[$F{date}]]></textFieldExpression>
+                <textFieldExpression><![CDATA[$F{label}]]></textFieldExpression>
             </textField>
             <textField pattern="#,##0.00">
                 <reportElement x="135" y="0" width="130" height="16"/>
@@ -96,7 +108,7 @@
             <textField pattern="#,##0.00">
                 <reportElement x="405" y="0" width="130" height="16"/>
                 <textElement textAlignment="Right"><font size="9"/></textElement>
-                <textFieldExpression><![CDATA[$F{netProfit}]]></textFieldExpression>
+                <textFieldExpression><![CDATA[$F{netResult}]]></textFieldExpression>
             </textField>
         </band>
     </detail>

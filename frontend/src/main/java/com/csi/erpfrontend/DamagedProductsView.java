@@ -18,8 +18,7 @@ import org.json.JSONObject;
 public class DamagedProductsView {
 
     public static Node build() {
-        Label title = new Label("Damaged Products");
-        title.getStyleClass().add("page-title");
+        HBox header = PageHeader.build("Damaged Products");
 
         VBox list = new VBox(10);
         try {
@@ -41,7 +40,7 @@ public class DamagedProductsView {
         VBox listCard = new VBox(10, list);
         listCard.getStyleClass().add("card");
 
-        VBox layout = new VBox(20, title, listCard);
+        VBox layout = new VBox(20, header, listCard);
         layout.setPadding(new Insets(28));
 
         ScrollPane scrollPane = new ScrollPane(layout);
@@ -63,6 +62,9 @@ public class DamagedProductsView {
         stage.setStyle("-fx-min-width: 120;");
         Label date = new Label(d.optString("damageDate", "?"));
         date.getStyleClass().add("muted-label");
-        return new HBox(16, product, quantity, cause, stage, date);
+        HBox row = new HBox(16, product, quantity, cause, stage, date);
+        row.getStyleClass().add("data-row");
+        row.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+        return row;
     }
 }

@@ -18,10 +18,9 @@ import org.json.JSONObject;
 public class MessagesView {
 
     public static Node build() {
-        Label title = new Label("Messages / Notifications");
-        title.getStyleClass().add("page-title");
+        HBox header = PageHeader.build("Messages / Notifications");
 
-        VBox layout = new VBox(20, title);
+        VBox layout = new VBox(20, header);
         layout.setPadding(new Insets(28));
 
         if (Session.isAdmin()) {

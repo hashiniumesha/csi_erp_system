@@ -33,8 +33,7 @@ public class InventoryView {
     };
 
     public static Node build() {
-        Label title = new Label("Inventory");
-        title.getStyleClass().add("page-title");
+        HBox header = PageHeader.build("Inventory");
 
         // 2x2 grid so the cards actually fill the screen instead of
         // stacking in one narrow column with empty space beside each one.
@@ -43,12 +42,12 @@ public class InventoryView {
         Node formGrid = FormLayout.gridOfTwo(
                 buildProductCard(), buildMovementCard(), buildDamagedCard(), buildProductListCard(),
                 buildExpiryTrackingCard());
-        VBox layout = new VBox(20, title, formGrid);
+        VBox layout = new VBox(20, header, formGrid);
         layout.setPadding(new Insets(28));
 
         ScrollPane scrollPane = new ScrollPane(layout);
         scrollPane.setFitToWidth(true);
-        scrollPane.getStyleClass().add("inventory-bg");
+        scrollPane.getStyleClass().add("page-bg");
         return scrollPane;
     }
 
@@ -446,7 +445,10 @@ public class InventoryView {
         Label statusLabel = new Label(statusText(status, b.optLong("daysRemaining", 0)));
         statusLabel.getStyleClass().add(statusStyleClass(status));
 
-        return new HBox(14, name, batchNo, production, expiry, qty, statusLabel);
+        HBox row = new HBox(14, name, batchNo, production, expiry, qty, statusLabel);
+        row.getStyleClass().add("data-row");
+        row.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+        return row;
     }
 
     private static String statusText(String status, long daysRemaining) {
@@ -475,7 +477,10 @@ public class InventoryView {
         unit.getStyleClass().add("muted-label");
         unit.setStyle("-fx-min-width: 100;");
         Label stock = new Label("Stock: " + p.optDouble("currentStock", 0));
-        return new HBox(16, name, category, unit, stock);
+        HBox row = new HBox(16, name, category, unit, stock);
+        row.getStyleClass().add("data-row");
+        row.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+        return row;
     }
 
     // ComboBox.valueProperty() only fires when a list item is picked, not

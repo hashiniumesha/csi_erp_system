@@ -3,13 +3,25 @@ package erp_backend.controller;
 import erp_backend.entity.*;
 import erp_backend.repository.*;
 import erp_backend.service.SalesService;
+import net.sf.jasperreports.engine.JasperCompileManager;
+import net.sf.jasperreports.engine.JasperExportManager;
+import net.sf.jasperreports.engine.JasperFillManager;
+import net.sf.jasperreports.engine.JasperPrint;
+import net.sf.jasperreports.engine.JasperReport;
+import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.InputStream;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/sales")
@@ -134,6 +146,17 @@ public class SalesController {
         public BigDecimal quantity;
         public BigDecimal unitPrice;
         public BigDecimal subtotal;
+
+        // JasperReports' JRBeanCollectionDataSource reads rows via JavaBean
+        // getters (reflection), not direct public field access - without
+        // these the invoice PDF failed with "Unknown property 'productName'"
+        // even though the JSON response (Jackson, which does read public
+        // fields directly) worked fine.
+        public String getProductName() { return productName; }
+        public String getUnitOfMeasure() { return unitOfMeasure; }
+        public BigDecimal getQuantity() { return quantity; }
+        public BigDecimal getUnitPrice() { return unitPrice; }
+        public BigDecimal getSubtotal() { return subtotal; }
     }
 
     public static class InvoiceDetail {
@@ -168,6 +191,45 @@ public class SalesController {
             return v;
         }).toList();
         return d;
+    }
+
+    // Real, printable PDF - not a screenshot of the on-screen preview. Same
+    // JasperReports pattern as the Reports module (compile-at-request-time,
+    // fill from real data, export bytes), with the CSI logo embedded via an
+    // <image> element fed from an InputStream parameter.
+    @GetMapping("/invoice/{id}/pdf")
+    public ResponseEntity<byte[]> getInvoicePdf(@PathVariable Integer id) throws Exception {
+        InvoiceDetail invoice = getInvoiceDetail(id);
+
+        try (InputStream jrxml = getClass().getClassLoader().getResourceAsStream("reports/invoice.jrxml");
+             InputStream logo = getClass().getClassLoader().getResourceAsStream("csi-logo.png")) {
+            if (jrxml == null) {
+                throw new RuntimeException("Invoice PDF template not found on classpath");
+            }
+            JasperReport jasperReport = JasperCompileManager.compileReport(jrxml);
+
+            Map<String, Object> params = new HashMap<>();
+            params.put("logoImage", logo);
+            params.put("invoiceNumber", invoice.invoiceId);
+            params.put("invoiceDate", invoice.invoiceDate);
+            params.put("paymentType", invoice.paymentType);
+            params.put("customerName", invoice.customerName);
+            params.put("customerContact", invoice.customerContact);
+            params.put("salesOfficerName", invoice.salesOfficerName);
+            params.put("totalAmount", invoice.totalAmount);
+
+            JasperPrint jasperPrint = JasperFillManager.fillReport(
+                    jasperReport, params, new JRBeanCollectionDataSource(invoice.items));
+
+            byte[] pdfBytes = JasperExportManager.exportReportToPdf(jasperPrint);
+
+            String filename = "invoice-" + id + ".pdf";
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_PDF);
+            headers.setContentDisposition(
+                    org.springframework.http.ContentDisposition.attachment().filename(filename).build());
+            return new ResponseEntity<>(pdfBytes, headers, org.springframework.http.HttpStatus.OK);
+        }
     }
 
     @PostMapping("/route")

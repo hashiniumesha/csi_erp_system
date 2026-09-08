@@ -15,10 +15,9 @@ public class AdminUsersView {
     }
 
     public static Node build() {
-        Label title = new Label("User Management");
-        title.getStyleClass().add("page-title");
+        HBox header = PageHeader.build("User Management");
 
-        VBox layout = new VBox(20, title, buildCreateUserCard(), buildUserListCard());
+        VBox layout = new VBox(20, header, buildCreateUserCard(), buildUserListCard());
         layout.setPadding(new Insets(28));
 
         ScrollPane scrollPane = new ScrollPane(layout);
@@ -93,6 +92,8 @@ public class AdminUsersView {
             for (Object o : ApiClient.getArray("/api/users")) {
                 JSONObject u = (JSONObject) o;
                 HBox row = new HBox(16);
+                row.getStyleClass().add("data-row");
+                row.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
                 Label name = new Label(u.optString("fullName", "?"));
                 name.setStyle("-fx-font-weight: bold; -fx-min-width: 160;");
                 Label username = new Label("@" + u.optString("username", "?"));

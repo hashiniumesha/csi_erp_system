@@ -34,6 +34,13 @@ public class DashboardHomeView {
         Label subtitle = new Label(Session.getRoleName() + " dashboard — Ceylon Sweets Island ERP");
         subtitle.getStyleClass().add("dashboard-subtitle");
 
+        javafx.scene.control.Button refreshButton = RefreshUtil.newButton();
+        refreshButton.setOnAction(e -> AppNav.refreshCurrent());
+        javafx.scene.layout.Region headerSpacer = new javafx.scene.layout.Region();
+        javafx.scene.layout.HBox.setHgrow(headerSpacer, Priority.ALWAYS);
+        javafx.scene.layout.HBox headerRow = new javafx.scene.layout.HBox(12, welcome, headerSpacer, refreshButton);
+        headerRow.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+
         FlowPane statGrid = new FlowPane(16, 16);
         List<Node> charts = new ArrayList<>();
         boolean admin = Session.isAdmin();
@@ -77,7 +84,7 @@ public class DashboardHomeView {
         // height with empty space left below.
         Node chartGrid = FormLayout.rowFillHeight(charts.toArray(new Node[0]));
 
-        VBox layout = new VBox(20, welcome, subtitle, statGrid, chartGrid);
+        VBox layout = new VBox(20, headerRow, subtitle, statGrid, chartGrid);
         layout.setPadding(new Insets(28));
         VBox.setVgrow(chartGrid, Priority.ALWAYS);
 

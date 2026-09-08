@@ -30,14 +30,13 @@ public class QCView {
     }
 
     public static Node build() {
-        Label title = new Label("Production / QC");
-        title.getStyleClass().add("page-title");
+        HBox header = PageHeader.build("Production / QC");
 
         VBox grnCard = buildGrnCard();
         VBox decisionCard = buildDecisionCard();
         VBox expiryCard = buildExpiryCard();
 
-        VBox layout = new VBox(20, title, grnCard, decisionCard, expiryCard);
+        VBox layout = new VBox(20, header, grnCard, decisionCard, expiryCard);
         layout.setPadding(new Insets(28));
 
         ScrollPane scrollPane = new ScrollPane(layout);
@@ -280,7 +279,10 @@ public class QCView {
             default -> "status-success";
         });
 
-        return new HBox(14, name, grnId, received, expiry, qty, statusLabel);
+        HBox row = new HBox(14, name, grnId, received, expiry, qty, statusLabel);
+        row.getStyleClass().add("data-row");
+        row.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+        return row;
     }
 
     private static String friendlyExpiryStatus(String status) {

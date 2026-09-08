@@ -25,18 +25,17 @@ public class RawMaterialView {
     private static final String[] UNIT_TYPES = { "kg", "g", "L", "ml", "pcs", "packets", "bundles" };
 
     public static Node build() {
-        Label title = new Label("Raw Materials");
-        title.getStyleClass().add("page-title");
+        HBox header = PageHeader.build("Raw Materials");
 
         // The two forms side by side, filling the width, with the request
         // history as its own full-width row below.
         Node formGrid = FormLayout.gridOfTwo(buildAddCard(), buildEditDeleteCard());
-        VBox layout = new VBox(20, title, formGrid, buildMyRequestsCard());
+        VBox layout = new VBox(20, header, formGrid, buildMyRequestsCard());
         layout.setPadding(new Insets(28));
 
         ScrollPane scrollPane = new ScrollPane(layout);
         scrollPane.setFitToWidth(true);
-        scrollPane.getStyleClass().add("inventory-bg");
+        scrollPane.getStyleClass().add("page-bg");
         return scrollPane;
     }
 
