@@ -50,7 +50,7 @@
    -fx-background-color instead of erroring. */
 .login-bg {
     -fx-background-color: -csi-page-bg;
-    -fx-background-image: url("login_background.jpeg");
+    -fx-background-image: url("login_background.png");
     -fx-background-size: cover;
     -fx-background-position: center center;
     -fx-background-repeat: no-repeat;
